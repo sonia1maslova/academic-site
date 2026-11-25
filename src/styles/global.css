@@ -1,0 +1,275 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: #faf9f6;
+  --bg-elevated: #ffffff;
+  --bg-subtle: #f2f0ea;
+  --fg: #18181b;
+  --fg-muted: #52525b;
+  --fg-faint: #71717a;
+  --border: #e5e2d9;
+  --border-strong: #d4d0c5;
+  --accent: #0f5c6e;
+  --accent-hover: #0a4654;
+  --accent-soft: #e6f2f5;
+  --warn-bg: #fef9ec;
+  --warn-border: #ead7a1;
+  --warn-fg: #7c5812;
+  --font-serif: "Newsreader", "Source Serif 4", "Noto Serif SC", "Songti SC", Georgia, Cambria, serif;
+  --font-sans: "Inter", "IBM Plex Sans", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.dark {
+  --bg: #111214;
+  --bg-elevated: #181a1e;
+  --bg-subtle: #1f2228;
+  --fg: #f1f0ec;
+  --fg-muted: #a1a1aa;
+  --fg-faint: #7b7c84;
+  --border: #272a31;
+  --border-strong: #373b44;
+  --accent: #5ec2d4;
+  --accent-hover: #83d5e3;
+  --accent-soft: #132c33;
+  --warn-bg: #262013;
+  --warn-border: #4d3f1d;
+  --warn-fg: #e7c97c;
+}
+
+@layer base {
+  html {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.7;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-serif-display {
+    font-family: var(--font-serif);
+    letter-spacing: -0.015em;
+  }
+
+  code,
+  pre,
+  .font-mono-meta {
+    font-family: var(--font-mono);
+  }
+
+  a {
+    transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease;
+  }
+
+  ::selection {
+    background-color: var(--accent-soft);
+    color: var(--accent);
+  }
+}
+
+.surface-card {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+.surface-subtle {
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+}
+
+.accent-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  text-underline-offset: 3px;
+}
+
+.accent-link:hover {
+  color: var(--accent-hover);
+  text-decoration-color: var(--accent-hover);
+}
+
+.pill-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  line-height: 1;
+  padding: 0.38rem 0.65rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--border);
+  background-color: var(--bg-elevated);
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+.pill-action:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background-color: var(--accent-soft);
+}
+
+.template-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--warn-border);
+  background-color: var(--warn-bg);
+  color: var(--warn-fg);
+}
+
+/* Editorial Prose for Markdown Notes */
+.academic-prose {
+  color: var(--fg);
+  font-size: 1.02rem;
+  line-height: 1.82;
+}
+
+.academic-prose h2 {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 2.25rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.academic-prose h3 {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-top: 1.65rem;
+  margin-bottom: 0.5rem;
+}
+
+.academic-prose p {
+  margin-bottom: 1.15rem;
+  color: color-mix(in srgb, var(--fg) 92%, var(--fg-muted));
+}
+
+.academic-prose ul,
+.academic-prose ol {
+  margin-bottom: 1.2rem;
+  padding-left: 1.4rem;
+}
+
+.academic-prose ul {
+  list-style-type: disc;
+}
+
+.academic-prose ol {
+  list-style-type: decimal;
+}
+
+.academic-prose li {
+  margin-bottom: 0.4rem;
+}
+
+.academic-prose blockquote {
+  border-left: 2.5px solid var(--accent);
+  padding: 0.25rem 0 0.25rem 1.1rem;
+  margin: 1.4rem 0;
+  color: var(--fg-muted);
+  font-style: italic;
+}
+
+.academic-prose a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.academic-prose :not(pre) > code {
+  font-size: 0.86em;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 0.3rem;
+  padding: 0.1rem 0.35rem;
+}
+
+.academic-prose pre {
+  padding: 1rem 1.15rem;
+  border-radius: 0.625rem;
+  border: 1px solid var(--border);
+  overflow-x: auto;
+  margin: 1.35rem 0;
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+.academic-prose hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+.academic-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.4rem 0;
+  font-size: 0.92rem;
+}
+
+.academic-prose th,
+.academic-prose td {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.academic-prose th {
+  font-weight: 600;
+  color: var(--fg);
+  background-color: var(--bg-subtle);
+}
+
+/* Shiki dual theme support */
+.dark .astro-code,
+.dark .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+}
+
+/* Print optimization for CV / Experience page */
+@media print {
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+
+  body,
+  html {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .surface-card,
+  .surface-subtle {
+    border-color: #d4d4d8 !important;
+    box-shadow: none !important;
+  }
+}

@@ -1,0 +1,73 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { ui } from '../i18n/ui';
+import { localePath, type Locale } from '../utils/paths';
+import Icons from './Icons.astro';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const labels = ui[lang];
+
+const notes = (await getCollection('notes'))
+  .filter((n) => n.data.lang === lang)
+  .sort((a, b) => b.data.date.localeCompare(a.data.date));
+---
+
+<BaseLayout lang={lang} title={labels.notes.title} description={labels.notes.subtitle}>
+  <header class="border-b border-[var(--border)] pb-7">
+    <h1 class="text-3xl font-semibold text-[var(--fg)] sm:text-4xl">{labels.notes.title}</h1>
+    <p class="mt-2.5 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
+      {labels.notes.subtitle}
+    </p>
+  </header>
+
+  {notes.length === 0 ? (
+    <p class="mt-10 text-sm text-[var(--fg-faint)]">{labels.notes.empty}</p>
+  ) : (
+    <div class="mt-8 space-y-4">
+      {notes.map((note) => (
+        <article class="surface-card p-5 transition-colors hover:border-[var(--border-strong)] sm:p-6">
+          <div class="flex flex-wrap items-center gap-2 font-mono-meta text-xs text-[var(--fg-faint)]">
+            <time datetime={note.data.date}>{note.data.date}</time>
+            <span>·</span>
+            <span>
+              {note.data.readingTime} {labels.notes.readingTime}
+            </span>
+          </div>
+
+          <h2 class="mt-2 text-xl font-semibold leading-snug text-[var(--fg)]">
+            <a
+              href={localePath(lang, `notes/${note.data.slugKey}`)}
+              class="hover:text-[var(--accent)]"
+            >
+              {note.data.title}
+            </a>
+          </h2>
+
+          <p class="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">{note.data.summary}</p>
+
+          <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap gap-1.5">
+              {note.data.tags.map((tag) => (
+                <span class="rounded bg-[var(--bg-subtle)] px-2 py-0.5 font-mono-meta text-[11px] text-[var(--fg-muted)]">
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <a
+              href={localePath(lang, `notes/${note.data.slugKey}`)}
+              class="inline-flex items-center gap-1 text-xs font-medium text-[var(--accent)] hover:text-[var(--accent-hover)]"
+            >
+              <span>{labels.actions.readNote}</span>
+              <Icons name="arrow-right" class="h-3.5 w-3.5" />
+            </a>
+          </div>
+        </article>
+      ))}
+    </div>
+  )}
+</BaseLayout>

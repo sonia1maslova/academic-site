@@ -1,0 +1,62 @@
+---
+import '../styles/global.css';
+import { profile } from '../data/profile';
+import { ui } from '../i18n/ui';
+import { withBase, type Locale } from '../utils/paths';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  lang: Locale;
+  title?: string;
+  description?: string;
+  alternateHref?: string;
+}
+
+const { lang, title, description, alternateHref } = Astro.props;
+const labels = ui[lang];
+const baseTitle = `${profile.name.en} · ${labels.siteTagline}`;
+const pageTitle = title ? `${title} — ${profile.name.en}` : baseTitle;
+const pageDesc = description ?? profile.bio[lang][0];
+const htmlLang = lang === 'zh' ? 'zh-CN' : 'en';
+---
+
+<!doctype html>
+<html lang={htmlLang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={pageDesc} />
+    <meta name="author" content={profile.name.en} />
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+    <title>{pageTitle}</title>
+
+    <!-- Editorial Google Fonts with fast swap & system/CJK fallbacks -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Zero-flash theme initialization -->
+    <script is:inline>
+      (() => {
+        try {
+          const saved = localStorage.getItem('academic-site-theme');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (saved === 'dark' || (!saved && prefersDark)) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch {}
+      })();
+    </script>
+  </head>
+  <body>
+    <Header lang={lang} alternateHref={alternateHref} />
+    <main class="mx-auto w-full max-w-4xl flex-1 px-5 pt-10 sm:px-6 sm:pt-14">
+      <slot />
+    </main>
+    <Footer lang={lang} />
+  </body>
+</html>

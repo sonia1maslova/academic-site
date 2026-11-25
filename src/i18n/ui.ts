@@ -1,0 +1,199 @@
+import type { Locale } from '../utils/paths';
+
+export interface BilingualText {
+  en: string;
+  zh: string;
+}
+
+export function t(text: BilingualText, lang: Locale): string {
+  return text[lang];
+}
+
+export const ui = {
+  en: {
+    siteTagline: 'Academic Homepage',
+    nav: {
+      home: 'About',
+      publications: 'Publications',
+      projects: 'Projects',
+      experience: 'Experience',
+      notes: 'Notes',
+    },
+    actions: {
+      viewAll: 'View all',
+      downloadCv: 'Curriculum Vitae',
+      contactEmail: 'Email',
+      github: 'GitHub',
+      googleScholar: 'Google Scholar',
+      orcid: 'ORCID',
+      abstract: 'Abstract',
+      bibtex: 'BibTeX',
+      copy: 'Copy',
+      copied: 'Copied',
+      code: 'Code',
+      paper: 'Paper',
+      preprint: 'Preprint',
+      slides: 'Slides',
+      demo: 'Live Demo',
+      gallery: 'Figure Gallery',
+      pypi: 'PyPI',
+      backToNotes: 'Back to all notes',
+      readNote: 'Read note',
+      printCv: 'Print / Save PDF',
+      switchTheme: 'Toggle color theme',
+      switchLang: '中文',
+      menu: 'Menu',
+    },
+    home: {
+      researchInterests: 'Research Interests',
+      latestNews: 'News & Updates',
+      selectedPublications: 'Selected Publications',
+      featuredProjects: 'Research Software & Open-Source Projects',
+      recentNotes: 'Research Notes',
+      openSourceBadge: 'GitHub',
+      templateNoticeTitle: 'Starter Template Ready to Personalize',
+      templateNoticeBody:
+        'Your public GitHub research repositories have been imported automatically. Biography details, education/experience entries, and sample papers marked with a template badge can be replaced in src/data/ and src/content/.',
+    },
+    publications: {
+      title: 'Publications',
+      subtitle:
+        'Peer-reviewed articles, preprints, and conference works. Filter by category or expand entries for abstracts and BibTeX.',
+      all: 'All',
+      journal: 'Journal',
+      preprint: 'Preprint',
+      conference: 'Conference',
+      templateBadge: 'Example Template',
+      empty: 'No publications match this filter yet.',
+    },
+    projects: {
+      title: 'Projects & Software',
+      subtitle:
+        'Open-source neuroimaging tools, electrophysiology analysis pipelines, figure galleries, and interactive web utilities hosted on GitHub.',
+      all: 'All',
+      software: 'Software',
+      research: 'Research Code',
+      visualization: 'Visualization',
+      tool: 'Web Tool',
+      notes: 'Knowledge Base',
+      githubImported: 'Synced from GitHub',
+      empty: 'No projects in this category.',
+    },
+    experience: {
+      title: 'Experience & CV',
+      subtitle:
+        'Academic background, research appointments, honors, academic service, and technical toolkit.',
+      education: 'Education',
+      research: 'Research Experience',
+      honors: 'Honors & Awards',
+      service: 'Academic Service & Open Science',
+      methods: 'Methods & Technical Skills',
+      templateBadge: 'Template Entry — Edit in src/data/experience.ts',
+    },
+    notes: {
+      title: 'Research Notes',
+      subtitle:
+        'Short essays, methodological reflections, and reproducible research workflows written in Markdown.',
+      readingTime: 'min read',
+      publishedOn: 'Published',
+      updatedOn: 'Updated',
+      empty: 'No notes published yet.',
+    },
+    footer: {
+      builtWith: 'Built with Astro · Deployed via GitHub Pages',
+      lastUpdated: 'Source on GitHub',
+    },
+  },
+  zh: {
+    siteTagline: '科研个人主页',
+    nav: {
+      home: '简介',
+      publications: '学术成果',
+      projects: '科研项目',
+      experience: '经历履历',
+      notes: '科研笔记',
+    },
+    actions: {
+      viewAll: '查看全部',
+      downloadCv: '个人简历',
+      contactEmail: '邮箱联系',
+      github: 'GitHub',
+      googleScholar: 'Google Scholar',
+      orcid: 'ORCID',
+      abstract: '摘要',
+      bibtex: 'BibTeX',
+      copy: '复制',
+      copied: '已复制',
+      code: '代码',
+      paper: '论文',
+      preprint: '预印本',
+      slides: '幻灯片',
+      demo: '在线演示',
+      gallery: '在线图表画廊',
+      pypi: 'PyPI',
+      backToNotes: '返回全部笔记',
+      readNote: '阅读全文',
+      printCv: '打印 / 导出 PDF',
+      switchTheme: '切换明暗主题',
+      switchLang: 'EN',
+      menu: '导航菜单',
+    },
+    home: {
+      researchInterests: '研究方向',
+      latestNews: '最新动态',
+      selectedPublications: '代表性成果',
+      featuredProjects: '科研工具与开源项目',
+      recentNotes: '科研笔记',
+      openSourceBadge: 'GitHub 开源',
+      templateNoticeTitle: '站点框架已就绪，可随时替换为真实简历信息',
+      templateNoticeBody:
+        '已自动收录你 GitHub 公开的科研工具、分析代码与图表画廊仓库；带有“示例占位”标记的个人院校、经历与论文条目，均可在 src/data/ 与 src/content/ 中快速修改。',
+    },
+    publications: {
+      title: '学术成果与论文',
+      subtitle:
+        '期刊论文、预印本及学术会议成果。支持按类型筛选、展开摘要以及一键复制 BibTeX 引用。',
+      all: '全部',
+      journal: '期刊论文',
+      preprint: '预印本',
+      conference: '会议成果',
+      templateBadge: '示例占位',
+      empty: '该分类下暂无成果记录。',
+    },
+    projects: {
+      title: '科研项目与开源工具',
+      subtitle:
+        '托管于 GitHub 的开源脑影像工具包、电生理分析脚本、在线图表画廊与交互式科研辅助工具。',
+      all: '全部',
+      software: '科研软件',
+      research: '研究代码',
+      visualization: '图表画廊',
+      tool: '交互工具',
+      notes: '知识笔记库',
+      githubImported: '来自 GitHub 公开仓库',
+      empty: '该分类下暂无项目。',
+    },
+    experience: {
+      title: '经历与学术履历',
+      subtitle: '教育背景、科研经历、荣誉奖项、学术服务及研究方法与技术栈。',
+      education: '教育背景',
+      research: '科研经历',
+      honors: '荣誉与奖项',
+      service: '学术服务与开放科学',
+      methods: '研究方法与技术栈',
+      templateBadge: '示例条目 — 请在 src/data/experience.ts 中替换',
+    },
+    notes: {
+      title: '科研笔记与随笔',
+      subtitle: '使用 Markdown 维护的方法论总结、实验记录与可复现研究工作流笔记。',
+      readingTime: '分钟阅读',
+      publishedOn: '发布于',
+      updatedOn: '更新于',
+      empty: '暂无已发布的笔记。',
+    },
+    footer: {
+      builtWith: '基于 Astro 构建 · 通过 GitHub Pages 自动部署',
+      lastUpdated: '查看仓库源码',
+    },
+  },
+} as const;

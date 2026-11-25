@@ -1,0 +1,315 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { profile } from '../data/profile';
+import { newsItems } from '../data/news';
+import { t, ui } from '../i18n/ui';
+import { localePath, withBase, type Locale } from '../utils/paths';
+import Icons from './Icons.astro';
+import ProjectCard from './ProjectCard.astro';
+import PublicationCard from './PublicationCard.astro';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const labels = ui[lang];
+
+const allProjects = (await getCollection('projects')).sort(
+  (a, b) => a.data.order - b.data.order
+);
+const featuredProjects = allProjects.filter((p) => p.data.featured).slice(0, 4);
+
+const selectedPublications = (await getCollection('publications'))
+  .filter((p) => p.data.selected)
+  .sort((a, b) => b.data.date.localeCompare(a.data.date));
+
+const recentNotes = (await getCollection('notes'))
+  .filter((n) => n.data.lang === lang)
+  .sort((a, b) => b.data.date.localeCompare(a.data.date))
+  .slice(0, 3);
+
+const githubUrl = `https://github.com/${profile.githubUsername}`;
+const cvHref = profile.cvPdfPath
+  ? withBase(profile.cvPdfPath)
+  : localePath(lang, 'experience');
+---
+
+<BaseLayout lang={lang}>
+  {profile.showTemplateBanner && (
+    <aside
+      class="mb-10 rounded-xl border px-4 py-3.5 text-sm leading-relaxed"
+      style="background-color: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-fg);"
+    >
+      <p class="font-medium">{labels.home.templateNoticeTitle}</p>
+      <p class="mt-1 text-xs opacity-90">{labels.home.templateNoticeBody}</p>
+    </aside>
+  )}
+
+  <!-- Editorial Academic Hero -->
+  <section class="grid gap-8 md:grid-cols-[1fr_11rem] md:items-start">
+    <div>
+      <p class="font-mono-meta text-xs uppercase tracking-[0.14em] text-[var(--accent)]">
+        {t(profile.role, lang)}
+      </p>
+      <h1 class="mt-2.5 text-3xl font-semibold tracking-tight text-[var(--fg)] sm:text-4xl">
+        {t(profile.name, lang)}
+      </h1>
+      <p class="mt-2 text-sm text-[var(--fg-muted)]">
+        {t(profile.affiliation, lang)}
+        <span class="mx-1.5 text-[var(--border-strong)]">·</span>
+        {t(profile.location, lang)}
+      </p>
+
+      <div class="mt-5 space-y-3.5 text-[0.98rem] leading-relaxed text-[var(--fg)]/90">
+        {profile.bio[lang].map((paragraph) => (
+          <p>{paragraph}</p>
+        ))}
+      </div>
+
+      <div class="mt-6 flex flex-wrap items-center gap-2.5">
+        <a
+          href={githubUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors"
+          style="background-color: var(--accent); color: var(--bg);"
+        >
+          <Icons name="github" class="h-4 w-4" />
+          <span>{labels.actions.github}</span>
+        </a>
+        <a
+          href={`mailto:${profile.email}`}
+          class="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] px-3.5 py-2 text-sm font-medium text-[var(--fg)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+        >
+          <Icons name="mail" class="h-4 w-4" />
+          <span>{labels.actions.contactEmail}</span>
+        </a>
+        <a
+          href={cvHref}
+          class="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] px-3.5 py-2 text-sm font-medium text-[var(--fg)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+        >
+          <Icons name="file" class="h-4 w-4" />
+          <span>{labels.actions.downloadCv}</span>
+        </a>
+        {profile.googleScholarUrl && (
+          <a
+            href={profile.googleScholarUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--fg-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+          >
+            <Icons name="scholar" class="h-4 w-4" />
+            <span>{labels.actions.googleScholar}</span>
+          </a>
+        )}
+        {profile.orcidUrl && (
+          <a
+            href={profile.orcidUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--fg-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+          >
+            <Icons name="orcid" class="h-4 w-4" />
+            <span>{labels.actions.orcid}</span>
+          </a>
+        )}
+      </div>
+    </div>
+
+    <!-- Editorial Portrait or Geometric Research Emblem -->
+    <div class="order-first flex justify-start md:order-last md:justify-end">
+      {profile.avatarPath ? (
+        <img
+          src={withBase(profile.avatarPath)}
+          alt={profile.name.en}
+          class="h-32 w-32 rounded-2xl border border-[var(--border)] object-cover shadow-xs md:h-40 md:w-40"
+        />
+      ) : (
+        <div
+          class="relative flex h-28 w-28 flex-col items-center justify-center overflow-hidden rounded-2xl border border-[var(--border)] md:h-40 md:w-40"
+          style="background: linear-gradient(145deg, var(--bg-elevated), var(--accent-soft));"
+          aria-hidden="true"
+        >
+          <svg
+            class="pointer-events-none absolute inset-0 h-full w-full opacity-25"
+            viewBox="0 0 160 160"
+            fill="none"
+          >
+            <circle cx="80" cy="80" r="56" stroke="var(--accent)" stroke-width="0.9" stroke-dasharray="3 4" />
+            <circle cx="80" cy="80" r="34" stroke="var(--accent)" stroke-width="0.8" />
+            <circle cx="46" cy="54" r="3" fill="var(--accent)" />
+            <circle cx="116" cy="60" r="3" fill="var(--accent)" />
+            <circle cx="96" cy="116" r="3" fill="var(--accent)" />
+            <path d="M46 54 L116 60 L96 116 Z" stroke="var(--accent)" stroke-width="0.8" />
+          </svg>
+          <span class="relative font-serif-display text-3xl font-semibold tracking-tight text-[var(--accent)] md:text-4xl">
+            {profile.monogram}
+          </span>
+          <span class="relative mt-1 font-mono-meta text-[10px] uppercase tracking-[0.18em] text-[var(--fg-faint)]">
+            Neuro · Comp
+          </span>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <!-- Research Interests -->
+  <section class="mt-16 border-t border-[var(--border)] pt-10">
+    <h2 class="text-2xl font-semibold text-[var(--fg)]">{labels.home.researchInterests}</h2>
+    <div class="mt-5 grid gap-4 sm:grid-cols-2">
+      {profile.researchInterests.map((interest) => (
+        <div class="surface-card p-5">
+          <div class="mb-2.5 h-0.5 w-8 rounded-full bg-[var(--accent)]" />
+          <h3 class="font-sans text-sm font-semibold text-[var(--fg)]">
+            {t(interest.title, lang)}
+          </h3>
+          <p class="mt-1.5 text-sm leading-relaxed text-[var(--fg-muted)]">
+            {t(interest.description, lang)}
+          </p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Latest News -->
+  <section class="mt-16 border-t border-[var(--border)] pt-10">
+    <h2 class="text-2xl font-semibold text-[var(--fg)]">{labels.home.latestNews}</h2>
+    <ul class="mt-5 divide-y divide-[var(--border)] border-y border-[var(--border)]">
+      {newsItems.map((item) => (
+        <li class="grid gap-1.5 py-3.5 sm:grid-cols-[5.5rem_1fr] sm:items-baseline sm:gap-5">
+          <span class="font-mono-meta text-xs font-medium text-[var(--fg-faint)]">
+            {item.date}
+          </span>
+          <div class="text-sm leading-relaxed text-[var(--fg)]/90">
+            <span>{t(item.text, lang)}</span>
+            {item.link && (
+              <a
+                href={item.link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="accent-link ml-2 inline-flex items-center gap-0.5 font-mono-meta text-xs whitespace-nowrap"
+              >
+                <span>{t(item.link.label, lang)}</span>
+                <Icons name="external" class="h-3 w-3" />
+              </a>
+            )}
+          </div>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <!-- Featured Open-Source Projects from GitHub -->
+  <section class="mt-16 border-t border-[var(--border)] pt-10">
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
+      <div>
+        <h2 class="text-2xl font-semibold text-[var(--fg)]">{labels.home.featuredProjects}</h2>
+      </div>
+      <a
+        href={localePath(lang, 'projects')}
+        class="inline-flex items-center gap-1 text-sm font-medium text-[var(--accent)] hover:text-[var(--accent-hover)]"
+      >
+        <span>{labels.actions.viewAll} ({allProjects.length})</span>
+        <Icons name="arrow-right" class="h-3.5 w-3.5" />
+      </a>
+    </div>
+
+    <div class="mt-5 grid gap-4 sm:grid-cols-2">
+      {featuredProjects.map((project) => (
+        <ProjectCard entry={project} lang={lang} compact={true} />
+      ))}
+    </div>
+  </section>
+
+  <!-- Selected Publications -->
+  <section class="mt-16 border-t border-[var(--border)] pt-10">
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
+      <h2 class="text-2xl font-semibold text-[var(--fg)]">{labels.home.selectedPublications}</h2>
+      <a
+        href={localePath(lang, 'publications')}
+        class="inline-flex items-center gap-1 text-sm font-medium text-[var(--accent)] hover:text-[var(--accent-hover)]"
+      >
+        <span>{labels.actions.viewAll}</span>
+        <Icons name="arrow-right" class="h-3.5 w-3.5" />
+      </a>
+    </div>
+
+    <div class="mt-5 space-y-4">
+      {selectedPublications.map((pub) => (
+        <PublicationCard entry={pub} lang={lang} />
+      ))}
+    </div>
+  </section>
+
+  <!-- Recent Research Notes -->
+  {recentNotes.length > 0 && (
+    <section class="mt-16 border-t border-[var(--border)] pt-10">
+      <div class="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 class="text-2xl font-semibold text-[var(--fg)]">{labels.home.recentNotes}</h2>
+        <a
+          href={localePath(lang, 'notes')}
+          class="inline-flex items-center gap-1 text-sm font-medium text-[var(--accent)] hover:text-[var(--accent-hover)]"
+        >
+          <span>{labels.actions.viewAll}</span>
+          <Icons name="arrow-right" class="h-3.5 w-3.5" />
+        </a>
+      </div>
+
+      <div class="mt-5 divide-y divide-[var(--border)] border-y border-[var(--border)]">
+        {recentNotes.map((note) => (
+          <a
+            href={localePath(lang, `notes/${note.data.slugKey}`)}
+            class="group block py-4 transition-colors"
+          >
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <h3 class="font-serif-display text-lg font-medium text-[var(--fg)] group-hover:text-[var(--accent)]">
+                {note.data.title}
+              </h3>
+              <span class="font-mono-meta text-xs text-[var(--fg-faint)]">
+                {note.data.date} · {note.data.readingTime} {labels.notes.readingTime}
+              </span>
+            </div>
+            <p class="mt-1 text-sm text-[var(--fg-muted)]">{note.data.summary}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+</BaseLayout>
+
+<script is:inline>
+  (() => {
+    document.querySelectorAll('.pub-toggle').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-target');
+        if (!targetId) return;
+        const panel = document.getElementById(targetId);
+        if (!panel) return;
+        const isHidden = panel.classList.toggle('hidden');
+        btn.setAttribute('aria-expanded', String(!isHidden));
+      });
+    });
+
+    document.querySelectorAll('.copy-bibtex-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const container = btn.closest('[id^="bibtex-"]');
+        const code = container?.querySelector('code')?.textContent ?? '';
+        if (!code) return;
+        try {
+          await navigator.clipboard.writeText(code);
+          const labelSpan = btn.querySelector('.copy-label');
+          if (labelSpan) {
+            const orig = btn.getAttribute('data-copy-label') || 'Copy';
+            const done = btn.getAttribute('data-copied-label') || 'Copied';
+            labelSpan.textContent = done;
+            setTimeout(() => {
+              labelSpan.textContent = orig;
+            }, 1800);
+          }
+        } catch {}
+      });
+    });
+  })();
+</script>

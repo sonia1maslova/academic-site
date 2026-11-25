@@ -1,0 +1,117 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { ui } from '../i18n/ui';
+import type { Locale } from '../utils/paths';
+import Icons from './Icons.astro';
+
+interface Props {
+  entry: CollectionEntry<'projects'>;
+  lang: Locale;
+  compact?: boolean;
+}
+
+const { entry, lang, compact = false } = Astro.props;
+const { data } = entry;
+const labels = ui[lang];
+const title = lang === 'zh' ? data.titleZh : data.title;
+const summary = lang === 'zh' ? data.summaryZh : data.summary;
+const highlights = lang === 'zh' ? data.highlightsZh : data.highlights;
+const categoryLabel = labels.projects[data.category];
+---
+
+<article
+  class="project-item surface-card flex h-full flex-col justify-between p-5 transition-colors hover:border-[var(--border-strong)] sm:p-6"
+  data-project-category={data.category}
+>
+  <div>
+    <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div class="flex flex-wrap items-center gap-2">
+        <span
+          class="inline-flex items-center rounded px-2 py-0.5 font-mono-meta font-medium"
+          style="background-color: var(--accent-soft); color: var(--accent);"
+        >
+          {categoryLabel}
+        </span>
+        {data.language && (
+          <span class="font-mono-meta text-[11px] text-[var(--fg-faint)]">
+            {data.language}
+          </span>
+        )}
+      </div>
+      <span class="font-mono-meta text-[11px] text-[var(--fg-faint)]">{data.year}</span>
+    </div>
+
+    <h3 class="mt-3 text-lg font-semibold leading-snug text-[var(--fg)]">
+      {data.links.github ? (
+        <a
+          href={data.links.github}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hover:text-[var(--accent)]"
+        >
+          {title}
+        </a>
+      ) : (
+        title
+      )}
+    </h3>
+
+    <p class="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">{summary}</p>
+
+    {!compact && highlights.length > 0 && (
+      <ul class="mt-3.5 space-y-1.5 border-t border-[var(--border)] pt-3 text-xs leading-relaxed text-[var(--fg-muted)]">
+        {highlights.map((item) => (
+          <li class="flex items-start gap-2">
+            <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]/70" />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+
+  <div class="mt-4 pt-2">
+    {data.tags.length > 0 && (
+      <div class="mb-3.5 flex flex-wrap gap-1.5">
+        {data.tags.map((tag) => (
+          <span class="rounded bg-[var(--bg-subtle)] px-2 py-0.5 font-mono-meta text-[11px] text-[var(--fg-muted)]">
+            {tag}
+          </span>
+        ))}
+      </div>
+    )}
+
+    <div class="flex flex-wrap items-center gap-2">
+      {data.links.github && (
+        <a href={data.links.github} target="_blank" rel="noopener noreferrer" class="pill-action">
+          <Icons name="github" class="h-3.5 w-3.5" />
+          <span>{labels.actions.github}</span>
+        </a>
+      )}
+      {data.links.pypi && (
+        <a href={data.links.pypi} target="_blank" rel="noopener noreferrer" class="pill-action">
+          <Icons name="pypi" class="h-3.5 w-3.5" />
+          <span>{labels.actions.pypi}</span>
+        </a>
+      )}
+      {data.links.gallery && (
+        <a href={data.links.gallery} target="_blank" rel="noopener noreferrer" class="pill-action">
+          <Icons name="gallery" class="h-3.5 w-3.5" />
+          <span>{labels.actions.gallery}</span>
+        </a>
+      )}
+      {data.links.demo && (
+        <a href={data.links.demo} target="_blank" rel="noopener noreferrer" class="pill-action">
+          <Icons name="external" class="h-3.5 w-3.5" />
+          <span>{labels.actions.demo}</span>
+        </a>
+      )}
+      {data.links.paper && (
+        <a href={data.links.paper} target="_blank" rel="noopener noreferrer" class="pill-action">
+          <Icons name="file" class="h-3.5 w-3.5" />
+          <span>{labels.actions.paper}</span>
+        </a>
+      )}
+    </div>
+  </div>
+</article>

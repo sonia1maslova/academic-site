@@ -1,0 +1,55 @@
+---
+import { profile } from '../data/profile';
+import { ui } from '../i18n/ui';
+import type { Locale } from '../utils/paths';
+import Icons from './Icons.astro';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const labels = ui[lang];
+const currentYear = new Date().getFullYear();
+const repoUrl = `https://github.com/${profile.githubUsername}/${profile.siteRepoName}`;
+const githubUrl = `https://github.com/${profile.githubUsername}`;
+---
+
+<footer class="mt-20 border-t border-[var(--border)]">
+  <div class="mx-auto flex max-w-4xl flex-col gap-4 px-5 py-8 text-xs text-[var(--fg-faint)] sm:flex-row sm:items-center sm:justify-between sm:px-6">
+    <div class="space-y-1">
+      <p class="font-medium text-[var(--fg-muted)]">
+        © {currentYear} {profile.name.en}
+      </p>
+      <p>{labels.footer.builtWith}</p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-4">
+      <a
+        href={`mailto:${profile.email}`}
+        class="inline-flex items-center gap-1.5 text-[var(--fg-muted)] hover:text-[var(--accent)]"
+      >
+        <Icons name="mail" class="h-3.5 w-3.5" />
+        <span>{profile.email}</span>
+      </a>
+      <a
+        href={githubUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-1.5 text-[var(--fg-muted)] hover:text-[var(--accent)]"
+      >
+        <Icons name="github" class="h-3.5 w-3.5" />
+        <span>@{profile.githubUsername}</span>
+      </a>
+      <a
+        href={repoUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-1 text-[var(--fg-muted)] hover:text-[var(--accent)]"
+      >
+        <span>{labels.footer.lastUpdated}</span>
+        <Icons name="external" class="h-3 w-3" />
+      </a>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,84 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { ui } from '../i18n/ui';
+import { localePath, type Locale } from '../utils/paths';
+import Icons from './Icons.astro';
+
+interface Props {
+  entry: CollectionEntry<'notes'>;
+  lang: Locale;
+}
+
+const { entry, lang } = Astro.props;
+const labels = ui[lang];
+const { Content } = await render(entry);
+
+const targetLang: Locale = lang === 'en' ? 'zh' : 'en';
+const allNotes = await getCollection('notes');
+const hasTranslation = allNotes.some(
+  (n) => n.data.lang === targetLang && n.data.slugKey === entry.data.slugKey
+);
+const alternateHref = hasTranslation
+  ? localePath(targetLang, `notes/${entry.data.slugKey}`)
+  : localePath(targetLang, 'notes');
+---
+
+<BaseLayout
+  lang={lang}
+  title={entry.data.title}
+  description={entry.data.summary}
+  alternateHref={alternateHref}
+>
+  <article class="mx-auto max-w-3xl">
+    <a
+      href={localePath(lang, 'notes')}
+      class="inline-flex items-center gap-1.5 font-mono-meta text-xs text-[var(--fg-muted)] hover:text-[var(--accent)]"
+    >
+      <Icons name="arrow-left" class="h-3.5 w-3.5" />
+      <span>{labels.actions.backToNotes}</span>
+    </a>
+
+    <header class="mt-6 border-b border-[var(--border)] pb-6">
+      <div class="flex flex-wrap items-center gap-2 font-mono-meta text-xs text-[var(--fg-faint)]">
+        <span>
+          {labels.notes.publishedOn} {entry.data.date}
+        </span>
+        {entry.data.updated && (
+          <>
+            <span>·</span>
+            <span>
+              {labels.notes.updatedOn} {entry.data.updated}
+            </span>
+          </>
+        )}
+        <span>·</span>
+        <span>
+          {entry.data.readingTime} {labels.notes.readingTime}
+        </span>
+      </div>
+
+      <h1 class="mt-3 text-3xl font-semibold leading-tight text-[var(--fg)] sm:text-4xl">
+        {entry.data.title}
+      </h1>
+
+      <p class="mt-3 text-base leading-relaxed text-[var(--fg-muted)]">
+        {entry.data.summary}
+      </p>
+
+      {entry.data.tags.length > 0 && (
+        <div class="mt-4 flex flex-wrap gap-1.5">
+          {entry.data.tags.map((tag) => (
+            <span class="rounded bg-[var(--bg-subtle)] px-2.5 py-0.5 font-mono-meta text-xs text-[var(--fg-muted)]">
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+    </header>
+
+    <div class="academic-prose mt-8">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>

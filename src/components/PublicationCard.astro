@@ -1,0 +1,147 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { profile } from '../data/profile';
+import { ui } from '../i18n/ui';
+import type { Locale } from '../utils/paths';
+import Icons from './Icons.astro';
+
+interface Props {
+  entry: CollectionEntry<'publications'>;
+  lang: Locale;
+}
+
+const { entry, lang } = Astro.props;
+const { data } = entry;
+const labels = ui[lang];
+const title = lang === 'zh' && data.titleZh ? data.titleZh : data.title;
+const abstractText = lang === 'zh' && data.abstractZh ? data.abstractZh : data.abstract;
+const safeId = entry.id.replace(/[^a-zA-Z0-9_-]/g, '-');
+
+const isOwnAuthor = (author: string) =>
+  author.toLowerCase().includes(profile.name.en.toLowerCase());
+---
+
+<article
+  class="pub-item surface-card p-5 transition-colors hover:border-[var(--border-strong)] sm:p-6"
+  data-pub-type={data.type}
+>
+  <div class="flex flex-wrap items-center gap-2 text-xs">
+    <span
+      class="inline-flex items-center rounded px-2 py-0.5 font-mono-meta font-medium"
+      style="background-color: var(--accent-soft); color: var(--accent);"
+    >
+      {data.venueShort} · {data.year}
+    </span>
+    {data.isTemplate && (
+      <span class="template-chip">{labels.publications.templateBadge}</span>
+    )}
+    {data.tags.slice(0, 3).map((tag) => (
+      <span class="font-mono-meta text-[11px] text-[var(--fg-faint)]">#{tag}</span>
+    ))}
+  </div>
+
+  <h3 class="mt-2.5 text-lg font-semibold leading-snug text-[var(--fg)] sm:text-[1.15rem]">
+    {title}
+  </h3>
+
+  <p class="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
+    {data.authors.map((author, idx) => (
+      <>
+        {isOwnAuthor(author) ? (
+          <strong class="font-semibold text-[var(--fg)] underline decoration-[var(--accent)]/45 underline-offset-3">
+            {author}
+          </strong>
+        ) : (
+          <span>{author}</span>
+        )}
+        {idx < data.authors.length - 1 && <span>, </span>}
+      </>
+    ))}
+  </p>
+
+  <p class="mt-1 text-sm italic text-[var(--fg-faint)]">{data.venue}</p>
+
+  <div class="mt-4 flex flex-wrap items-center gap-2">
+    {abstractText && (
+      <button
+        type="button"
+        class="pill-action pub-toggle"
+        data-target={`abstract-${safeId}`}
+        aria-expanded="false"
+      >
+        <Icons name="file" class="h-3.5 w-3.5" />
+        <span>{labels.actions.abstract}</span>
+      </button>
+    )}
+    {data.bibtex && (
+      <button
+        type="button"
+        class="pill-action pub-toggle"
+        data-target={`bibtex-${safeId}`}
+        aria-expanded="false"
+      >
+        <Icons name="code" class="h-3.5 w-3.5" />
+        <span>{labels.actions.bibtex}</span>
+      </button>
+    )}
+    {data.links.paper && (
+      <a href={data.links.paper} target="_blank" rel="noopener noreferrer" class="pill-action">
+        <Icons name="external" class="h-3.5 w-3.5" />
+        <span>{labels.actions.paper}</span>
+      </a>
+    )}
+    {data.links.preprint && (
+      <a href={data.links.preprint} target="_blank" rel="noopener noreferrer" class="pill-action">
+        <Icons name="external" class="h-3.5 w-3.5" />
+        <span>{labels.actions.preprint}</span>
+      </a>
+    )}
+    {data.links.code && (
+      <a href={data.links.code} target="_blank" rel="noopener noreferrer" class="pill-action">
+        <Icons name="github" class="h-3.5 w-3.5" />
+        <span>{labels.actions.code}</span>
+      </a>
+    )}
+    {data.links.gallery && (
+      <a href={data.links.gallery} target="_blank" rel="noopener noreferrer" class="pill-action">
+        <Icons name="gallery" class="h-3.5 w-3.5" />
+        <span>{labels.actions.gallery}</span>
+      </a>
+    )}
+    {data.links.slides && (
+      <a href={data.links.slides} target="_blank" rel="noopener noreferrer" class="pill-action">
+        <Icons name="external" class="h-3.5 w-3.5" />
+        <span>{labels.actions.slides}</span>
+      </a>
+    )}
+  </div>
+
+  {abstractText && (
+    <div
+      id={`abstract-${safeId}`}
+      class="surface-subtle mt-4 hidden p-4 text-sm leading-relaxed text-[var(--fg-muted)]"
+    >
+      {abstractText}
+    </div>
+  )}
+
+  {data.bibtex && (
+    <div id={`bibtex-${safeId}`} class="surface-subtle mt-4 hidden p-4">
+      <div class="mb-2 flex items-center justify-between">
+        <span class="font-mono-meta text-xs uppercase tracking-wider text-[var(--fg-faint)]">
+          BibTeX
+        </span>
+        <button
+          type="button"
+          class="pill-action copy-bibtex-btn"
+          data-copy-label={labels.actions.copy}
+          data-copied-label={labels.actions.copied}
+        >
+          <Icons name="copy" class="h-3 w-3" />
+          <span class="copy-label">{labels.actions.copy}</span>
+        </button>
+      </div>
+      <pre class="overflow-x-auto font-mono-meta text-xs leading-relaxed text-[var(--fg)]"><code>{data.bibtex.trim()}</code></pre>
+    </div>
+  )}
+</article>
