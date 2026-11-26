@@ -3,6 +3,8 @@ import type { BilingualText } from '../i18n/ui';
 export interface ProfileConfig {
   /** Primary display name in English and Chinese. */
   name: BilingualText;
+  /** One-sentence standfirst shown under the name on the home page. */
+  dek: BilingualText;
   /** Short monogram shown in the editorial emblem when no photo is set. */
   monogram: string;
   /**
@@ -49,7 +51,12 @@ export interface ProfileConfig {
 export const profile: ProfileConfig = {
   name: {
     en: 'Yuhao Duan',
-    zh: 'Yuhao Duan（请改为中文姓名）',
+    // 可改为中文姓名；首页大标题会按空格拆分，最后一个词显示为斜体/强调色
+    zh: 'Yuhao Duan',
+  },
+  dek: {
+    en: 'Studying how the human brain organises overlapping functional networks — from resting-state fMRI to intracranial recordings — and building open tools that make the work inspectable.',
+    zh: '研究人脑如何组织相互重叠的功能网络——从静息态 fMRI 到颅内电生理记录——并构建开放工具，让研究过程可检验、可复现。',
   },
   monogram: 'YD',
   avatarPath: '', // Put your photo in public/avatar.jpg and change this to '/avatar.jpg'

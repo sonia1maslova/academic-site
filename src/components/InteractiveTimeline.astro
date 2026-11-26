@@ -2,7 +2,6 @@
 import { timelineNodes, type TimelineCategory } from '../data/timeline';
 import { t, ui } from '../i18n/ui';
 import { withBase, type Locale } from '../utils/paths';
-import Icons from './Icons.astro';
 
 interface Props {
   lang: Locale;
@@ -12,30 +11,35 @@ interface Props {
 const { lang, compact = false } = Astro.props;
 const labels = ui[lang].timeline;
 
-const sorted = [...timelineNodes].sort((a, b) => a.date.localeCompare(b.date));
-
-const categoryColors: Record<TimelineCategory, string> = {
-  research: 'var(--tl-research)',
-  software: 'var(--tl-software)',
-  publication: 'var(--tl-publication)',
-  education: 'var(--tl-education)',
-  milestone: 'var(--tl-milestone)',
+const glyphs: Record<TimelineCategory, string> = {
+  research:
+    '<svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="4.2" fill="currentColor"/></svg>',
+  software:
+    '<svg viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="1" width="8" height="8" fill="currentColor"/></svg>',
+  publication:
+    '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .6 9.6 9.2H.4Z" fill="currentColor"/></svg>',
+  education:
+    '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .3 9.7 5 5 9.7.3 5Z" fill="currentColor"/></svg>',
+  milestone:
+    '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0v10M0 5h10M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" stroke-width="1.7"/></svg>',
 };
 
-const localizedNodes = sorted.map((node) => ({
+const sorted = [...timelineNodes].sort((a, b) => a.date.localeCompare(b.date));
+const pad = (n: number) => String(n).padStart(2, '0');
+
+const nodes = sorted.map((node, idx) => ({
   id: node.id,
-  date: node.date,
-  shortDate: node.shortDate,
+  no: pad(idx + 1),
+  shortDate: node.date.slice(0, 7).replace('-', '.'),
   displayDate: t(node.displayDate, lang),
   year: node.year,
   category: node.category,
   categoryLabel: labels.categories[node.category],
-  color: categoryColors[node.category],
   title: t(node.title, lang),
   subtitle: node.subtitle ? t(node.subtitle, lang) : '',
   summary: t(node.summary, lang),
-  details: node.details[lang],
-  tags: node.tags,
+  details: [...node.details[lang]],
+  tags: [...node.tags],
   isTemplate: Boolean(node.isTemplate),
   links: (node.links ?? []).map((l) => ({
     label: t(l.label, lang),
@@ -44,9 +48,7 @@ const localizedNodes = sorted.map((node) => ({
   })),
 }));
 
-const years = Array.from(new Set(localizedNodes.map((n) => n.year))).sort((a, b) => a - b);
-
-const categoryOrder: ('all' | TimelineCategory)[] = [
+const categoryKeys: ('all' | TimelineCategory)[] = [
   'all',
   'research',
   'software',
@@ -54,363 +56,139 @@ const categoryOrder: ('all' | TimelineCategory)[] = [
   'education',
   'milestone',
 ];
+const filters = categoryKeys
+  .map((key) => ({
+    key,
+    label: labels.categories[key],
+    count: key === 'all' ? nodes.length : nodes.filter((n) => n.category === key).length,
+  }))
+  .filter((f) => f.count > 0);
 
-const categoryCounts = categoryOrder.map((key) => ({
-  key,
-  label: labels.categories[key],
-  count:
-    key === 'all'
-      ? localizedNodes.length
-      : localizedNodes.filter((n) => n.category === key).length,
-  color: key === 'all' ? 'var(--accent)' : categoryColors[key],
-}));
-
-const initialNode = localizedNodes[localizedNodes.length - 1];
+const initial = nodes[nodes.length - 1];
 const payloadJson = JSON.stringify({
-  nodes: localizedNodes,
-  i18n: {
-    templateBadge: labels.templateBadge,
-    keyPoints: labels.keyPoints,
-    empty: labels.empty,
-    prev: labels.prev,
-    next: labels.next,
-  },
+  nodes,
+  glyphs,
+  i18n: { templateBadge: labels.templateBadge },
 }).replace(/</g, '\\u003c');
 ---
 
-<div
-  class="interactive-timeline-root space-y-4"
-  data-interactive-timeline
-  data-compact={compact ? 'true' : 'false'}
->
-  <!-- Top Controls: Category Filter + Zoom + Step Controls -->
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <div class="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Filter timeline">
-      {categoryCounts.map((cat, idx) => (
+<div class="chron" data-interactive-timeline data-compact={compact ? 'true' : 'false'}>
+  <div class="chron-controls">
+    <div class="chron-filters" role="group" aria-label="Filter">
+      {filters.map((f, idx) => (
         <button
           type="button"
-          data-tl-filter={cat.key}
-          class:list={[
-            'tl-filter-btn inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono-meta text-xs transition-colors',
-            idx === 0
-              ? 'border-[var(--accent)] bg-[var(--accent-soft)] font-medium text-[var(--accent)]'
-              : 'border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]',
-          ]}
+          class="filter-btn"
+          data-tl-filter={f.key}
+          aria-pressed={idx === 0 ? 'true' : 'false'}
         >
-          {cat.key !== 'all' && (
-            <span
-              class="h-2 w-2 rounded-full"
-              style={`background-color: ${cat.color};`}
-              aria-hidden="true"
-            />
-          )}
-          <span>{cat.label}</span>
-          <span class="opacity-65">{cat.count}</span>
+          {f.key !== 'all' && <span class="glyph" set:html={glyphs[f.key]} />}
+          <span>{f.label}</span>
+          <sup>{f.count}</sup>
         </button>
       ))}
     </div>
 
-    <div class="flex flex-wrap items-center gap-2">
+    <div class="chron-nav">
       {!compact && (
-        <div
-          class="inline-flex items-center rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-0.5 font-mono-meta text-[11px]"
-          role="group"
-          aria-label="Timeline spacing"
-        >
-          <button
-            type="button"
-            data-tl-zoom="compact"
-            class="tl-zoom-btn cursor-pointer rounded px-2 py-1 text-[var(--fg-muted)] hover:text-[var(--fg)]"
-          >
-            {labels.zoomCompact}
-          </button>
-          <button
-            type="button"
-            data-tl-zoom="standard"
-            class="tl-zoom-btn cursor-pointer rounded bg-[var(--accent-soft)] px-2 py-1 font-medium text-[var(--accent)]"
-          >
-            {labels.zoomStandard}
-          </button>
-          <button
-            type="button"
-            data-tl-zoom="wide"
-            class="tl-zoom-btn cursor-pointer rounded px-2 py-1 text-[var(--fg-muted)] hover:text-[var(--fg)]"
-          >
-            {labels.zoomWide}
-          </button>
+        <div class="chron-density" role="group" aria-label={labels.density}>
+          <span class="eyebrow">{labels.density}</span>
+          <button type="button" data-tl-zoom="compact" aria-pressed="false">{labels.zoomCompact}</button>
+          <button type="button" data-tl-zoom="standard" aria-pressed="true">{labels.zoomStandard}</button>
+          <button type="button" data-tl-zoom="wide" aria-pressed="false">{labels.zoomWide}</button>
         </div>
       )}
-
-      <div class="inline-flex items-center gap-1">
-        <button
-          type="button"
-          data-tl-prev
-          aria-label={labels.prev}
-          title={labels.prev}
-          class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <Icons name="arrow-left" class="h-3.5 w-3.5" />
-        </button>
-        <span
-          data-tl-counter
-          class="min-w-[3.4rem] text-center font-mono-meta text-xs text-[var(--fg-muted)]"
-        >
-          {localizedNodes.length} / {localizedNodes.length}
-        </span>
-        <button
-          type="button"
-          data-tl-next
-          aria-label={labels.next}
-          title={labels.next}
-          class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <Icons name="arrow-right" class="h-3.5 w-3.5" />
-        </button>
-      </div>
+      <button type="button" class="chron-step" data-tl-prev>← {labels.prev}</button>
+      <span class="chron-counter" data-tl-counter>
+        {initial?.no}<i> / {pad(nodes.length)}</i>
+      </span>
+      <button type="button" class="chron-step" data-tl-next>{labels.next} →</button>
     </div>
   </div>
 
-  <!-- Main Interactive Draggable Stage + Precision Scrubber -->
-  <div class="surface-card overflow-hidden">
-    <div
-      data-tl-stage
-      tabindex="0"
-      role="region"
-      aria-label={labels.title}
-      class:list={[
-        'timeline-stage relative w-full overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]',
-        compact ? 'h-[376px] sm:h-[404px]' : 'h-[396px] sm:h-[424px]',
-      ]}
-    >
-      <!-- Subtle edge fade masks -->
-      <div
-        class="pointer-events-none absolute inset-y-0 left-0 z-20 w-10 sm:w-16"
-        style="background: linear-gradient(to right, var(--bg-elevated), transparent);"
-        aria-hidden="true"
-      />
-      <div
-        class="pointer-events-none absolute inset-y-0 right-0 z-20 w-10 sm:w-16"
-        style="background: linear-gradient(to left, var(--bg-elevated), transparent);"
-        aria-hidden="true"
-      />
-
-      <!-- Center vertical focus hairline & live floating date badge -->
-      <div
-        class="pointer-events-none absolute inset-y-0 left-1/2 z-10 -translate-x-1/2 border-l border-dashed"
-        style="border-color: color-mix(in srgb, var(--accent) 40%, transparent);"
-        aria-hidden="true"
-      />
-      <div class="pointer-events-none absolute top-2.5 left-1/2 z-30 -translate-x-1/2">
-        <span
-          data-tl-focus-date
-          class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono-meta text-[11px] font-medium shadow-xs"
-          style="background-color: var(--bg-elevated); border-color: var(--border-strong); color: var(--accent);"
-        >
-          {initialNode?.shortDate ?? ''}
-        </span>
-      </div>
-
-      <!-- Subtle drag hint pill (fades once user drags) -->
-      <div
-        data-tl-drag-hint
-        class="pointer-events-none absolute right-3 bottom-3 z-30 hidden items-center gap-1.5 rounded-full border border-[var(--border)] px-2.5 py-1 font-mono-meta text-[10px] text-[var(--fg-faint)] transition-opacity duration-300 sm:inline-flex"
-        style="background-color: color-mix(in srgb, var(--bg-elevated) 88%, transparent);"
-      >
-        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <path d="M5 12h14M9 8l-4 4 4 4M15 8l4 4-4 4" />
-        </svg>
-        <span>{labels.dragHint}</span>
-      </div>
-
-      <!-- Horizontally translated track -->
-      <div
-        data-tl-track
-        class="absolute inset-y-0 left-0 will-change-transform"
-      >
-        <!-- Continuous ruler rail & nodes injected / updated by script -->
-      </div>
-
-      <!-- Empty filter state -->
-      <div
-        data-tl-empty
-        class="absolute inset-0 z-30 hidden items-center justify-center text-sm text-[var(--fg-faint)]"
-      >
-        {labels.empty}
-      </div>
+  <div class="chron-stage" data-tl-stage tabindex="0" role="region" aria-label={labels.kicker}>
+    <div class="chron-year" data-tl-year-big aria-hidden="true">
+      <span>{initial?.year}</span>
     </div>
-
-    <!-- Interactive Scrubber Ruler & Year Quick-Jumps -->
-    <div
-      class="border-t border-[var(--border)] px-4 py-3 sm:px-5"
-      style="background-color: color-mix(in srgb, var(--bg-subtle) 55%, var(--bg-elevated));"
-    >
-      <div class="relative mx-3 flex h-8 items-center">
-        <div
-          data-tl-scrubber-track
-          class="timeline-scrubber-track relative flex h-8 w-full cursor-pointer items-center"
-          role="slider"
-          aria-label={labels.dragHint}
-          aria-valuemin="1"
-          aria-valuemax={String(localizedNodes.length)}
-          aria-valuenow={String(localizedNodes.length)}
-        >
-          <!-- Base rail -->
-          <div class="h-1.5 w-full rounded-full bg-[var(--border)]" />
-          <!-- Progress fill -->
-          <div
-            data-tl-scrubber-fill
-            class="pointer-events-none absolute left-0 h-1.5 rounded-full"
-            style="width: 100%; background-color: color-mix(in srgb, var(--accent) 45%, transparent);"
-          />
-          <!-- Mini node markers along the scrubber -->
-          <div data-tl-scrubber-dots class="pointer-events-none absolute inset-0" />
-          <!-- Draggable scrubber thumb -->
-          <div
-            data-tl-scrubber-thumb
-            class="timeline-scrubber-thumb absolute top-1/2 z-10 flex h-6 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-0.5 rounded-full border-2 border-[var(--accent)] bg-[var(--bg-elevated)] shadow-xs"
-            style="left: 100%;"
-          >
-            <span class="h-2.5 w-0.5 rounded-full bg-[var(--accent)]/60" />
-            <span class="h-2.5 w-0.5 rounded-full bg-[var(--accent)]" />
-            <span class="h-2.5 w-0.5 rounded-full bg-[var(--accent)]/60" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Year quick-jump pills -->
-      <div class="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px]">
-        <div class="flex flex-wrap items-center gap-1.5" data-tl-years>
-          <span class="font-mono-meta text-[var(--fg-faint)] mr-1">{labels.jumpToYear}:</span>
-          {years.map((y) => (
-            <button
-              type="button"
-              data-tl-year={y}
-              class="tl-year-btn cursor-pointer rounded px-2 py-0.5 font-mono-meta text-[var(--fg-muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
-            >
-              {y}
-            </button>
-          ))}
-        </div>
-        <span class="hidden font-mono-meta text-[10px] text-[var(--fg-faint)] sm:inline">
-          ← / →
-        </span>
-      </div>
+    <div class="chron-axis" aria-hidden="true"></div>
+    <div class="chron-head" aria-hidden="true">
+      <span class="chron-head-label" data-tl-focus-date>{initial?.shortDate}</span>
     </div>
+    <div class="chron-track" data-tl-track></div>
+    <div class="chron-fade chron-fade-l" aria-hidden="true"></div>
+    <div class="chron-fade chron-fade-r" aria-hidden="true"></div>
+    <div class="chron-empty hidden" data-tl-empty>{labels.empty}</div>
+    <div class="chron-hint" data-tl-hint aria-hidden="true">{labels.dragHint}</div>
   </div>
 
-  <!-- Active Node Detail Inspector Panel (SSR initialized with latest node) -->
-  {initialNode && (
-    <article
-      data-tl-detail
-      class="surface-card p-5 transition-colors sm:p-6"
-      aria-live="polite"
+  <div class="chron-scrub">
+    <div
+      class="chron-scrub-track"
+      data-tl-scrub
+      role="slider"
+      aria-label={labels.dragHint}
+      aria-valuemin="1"
+      aria-valuemax={String(nodes.length)}
+      aria-valuenow={String(nodes.length)}
     >
-      <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
-        <div class="flex flex-wrap items-center gap-2">
-          <span
-            data-tl-detail-date
-            class="inline-flex items-center rounded px-2 py-0.5 font-mono-meta font-medium"
-            style={`background-color: color-mix(in srgb, ${initialNode.color} 14%, transparent); color: ${initialNode.color};`}
-          >
-            {initialNode.displayDate}
-          </span>
-          <span
-            data-tl-detail-cat
-            class="inline-flex items-center gap-1.5 rounded border border-[var(--border)] px-2 py-0.5 font-mono-meta text-[var(--fg-muted)]"
-          >
-            <span
-              class="h-1.5 w-1.5 rounded-full"
-              style={`background-color: ${initialNode.color};`}
-            />
-            {initialNode.categoryLabel}
-          </span>
-          <span
-            data-tl-detail-template
-            class:list={['template-chip', !initialNode.isTemplate && 'hidden']}
-          >
-            {labels.templateBadge}
-          </span>
-        </div>
+      <div class="chron-scrub-rail"></div>
+      <div class="chron-scrub-fill" data-tl-scrub-fill style="width: 100%;"></div>
+      <div data-tl-scrub-ticks></div>
+      <div class="chron-scrub-thumb" data-tl-scrub-thumb style="left: 100%;"></div>
+    </div>
+    <div class="chron-scrub-years" data-tl-years></div>
+  </div>
 
-        <span
-          data-tl-detail-index
-          class="font-mono-meta text-[11px] text-[var(--fg-faint)]"
-        >
-          #{String(localizedNodes.length).padStart(2, '0')} / {String(localizedNodes.length).padStart(2, '0')}
-        </span>
-      </div>
-
-      <h3
-        data-tl-detail-title
-        class="mt-3 text-xl font-semibold leading-snug text-[var(--fg)] sm:text-2xl"
-      >
-        {initialNode.title}
-      </h3>
-
-      <p
-        data-tl-detail-subtitle
-        class:list={[
-          'mt-1 font-mono-meta text-xs text-[var(--accent)]',
-          !initialNode.subtitle && 'hidden',
-        ]}
-      >
-        {initialNode.subtitle}
-      </p>
-
-      <p
-        data-tl-detail-summary
-        class="mt-3 text-sm leading-relaxed text-[var(--fg)]/90 sm:text-[0.96rem]"
-      >
-        {initialNode.summary}
-      </p>
-
-      <div
-        data-tl-detail-points-wrap
-        class:list={[
-          'mt-4 border-t border-[var(--border)] pt-3.5',
-          initialNode.details.length === 0 && 'hidden',
-        ]}
-      >
-        <p class="font-mono-meta text-[11px] uppercase tracking-wider text-[var(--fg-faint)]">
-          {labels.keyPoints}
+  {initial && (
+    <article class="chron-detail grid grid-cols-12 gap-x-8 gap-y-8" data-tl-detail aria-live="polite">
+      <div class="col-span-12 md:col-span-3">
+        <div class="chron-detail-no" data-tl-d-no>{initial.no}</div>
+        <p class="eyebrow mt-5" data-tl-d-date>{initial.displayDate}</p>
+        <p class="chron-detail-cat" data-tl-d-cat>
+          <span class="glyph" set:html={glyphs[initial.category]} />
+          {initial.categoryLabel}
         </p>
-        <ul
-          data-tl-detail-points
-          class="mt-2 space-y-1.5 text-sm leading-relaxed text-[var(--fg-muted)]"
-        >
-          {initialNode.details.map((pt) => (
-            <li class="flex items-start gap-2.5">
-              <span
-                class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full"
-                style={`background-color: ${initialNode.color};`}
-              />
-              <span>{pt}</span>
-            </li>
-          ))}
-        </ul>
+        <p class:list={['mt-4', !initial.isTemplate && 'hidden']} data-tl-d-tpl>
+          <span class="template-chip">{labels.templateBadge}</span>
+        </p>
       </div>
 
-      <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
-        <div data-tl-detail-tags class="flex flex-wrap gap-1.5">
-          {initialNode.tags.map((tag) => (
-            <span class="rounded bg-[var(--bg-subtle)] px-2 py-0.5 font-mono-meta text-[11px] text-[var(--fg-muted)]">
-              {tag}
-            </span>
-          ))}
+      <div class="col-span-12 md:col-span-6">
+        <h3 class="chron-detail-title" data-tl-d-title>{initial.title}</h3>
+        <p class:list={['eyebrow mt-4', !initial.subtitle && 'hidden']} data-tl-d-sub>
+          {initial.subtitle}
+        </p>
+        <p class="chron-detail-summary" data-tl-d-summary>{initial.summary}</p>
+        <div class:list={['mt-7', initial.details.length === 0 && 'hidden']} data-tl-d-points-wrap>
+          <p class="eyebrow">{labels.keyPoints}</p>
+          <ol class="chron-points" data-tl-d-points>
+            {initial.details.map((pt) => <li>{pt}</li>)}
+          </ol>
         </div>
+      </div>
 
-        <div data-tl-detail-links class="flex flex-wrap items-center gap-2">
-          {initialNode.links.map((link) => (
-            <a
-              href={link.href}
-              target={link.external ? '_blank' : undefined}
-              rel={link.external ? 'noopener noreferrer' : undefined}
-              class="pill-action"
-            >
-              <span>{link.label}</span>
-              {link.external && <Icons name="external" class="h-3 w-3" />}
-            </a>
-          ))}
+      <div class="col-span-12 md:col-span-3">
+        <p class="eyebrow">{labels.filedUnder}</p>
+        <ul class="chron-tags mt-2" data-tl-d-tags>
+          {initial.tags.map((tag) => <li>{tag}</li>)}
+        </ul>
+        <div class:list={['mt-7', initial.links.length === 0 && 'hidden']} data-tl-d-links-wrap>
+          <p class="eyebrow">{labels.links}</p>
+          <ul class="mt-2" data-tl-d-links>
+            {initial.links.map((link) => (
+              <li>
+                <a
+                  class="chron-link"
+                  href={link.href}
+                  target={link.external ? '_blank' : undefined}
+                  rel={link.external ? 'noopener noreferrer' : undefined}
+                >
+                  <span>{link.label}</span>
+                  <span aria-hidden="true">{link.external ? '↗' : '→'}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </article>
@@ -424,428 +202,310 @@ const payloadJson = JSON.stringify({
     const roots = document.querySelectorAll('[data-interactive-timeline]');
     if (!roots.length) return;
 
-    const ZOOM_SPACINGS = {
-      compact: 215,
-      standard: 268,
-      wide: 336,
-    };
-
-    const escapeHtml = (str) =>
-      String(str)
+    const SPACING = { compact: 236, standard: 296, wide: 372 };
+    const esc = (s) =>
+      String(s)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+    const pad = (n) => String(n).padStart(2, '0');
 
     roots.forEach((root) => {
-      if (root.dataset.tlInitialized === 'true') return;
-      root.dataset.tlInitialized = 'true';
+      if (root.dataset.tlInit === '1') return;
+      root.dataset.tlInit = '1';
 
-      const payloadEl = root.querySelector('[data-tl-payload]');
+      const q = (sel) => root.querySelector(sel);
+      const payloadEl = q('[data-tl-payload]');
       if (!payloadEl) return;
       const payload = JSON.parse(payloadEl.textContent || '{}');
       const allNodes = payload.nodes || [];
+      const glyphs = payload.glyphs || {};
       const i18n = payload.i18n || {};
 
-      const stage = root.querySelector('[data-tl-stage]');
-      const track = root.querySelector('[data-tl-track]');
-      const emptyEl = root.querySelector('[data-tl-empty]');
-      const focusDateEl = root.querySelector('[data-tl-focus-date]');
-      const dragHintEl = root.querySelector('[data-tl-drag-hint]');
-      const counterEl = root.querySelector('[data-tl-counter]');
-      const prevBtn = root.querySelector('[data-tl-prev]');
-      const nextBtn = root.querySelector('[data-tl-next]');
-      const scrubberTrack = root.querySelector('[data-tl-scrubber-track]');
-      const scrubberFill = root.querySelector('[data-tl-scrubber-fill]');
-      const scrubberDots = root.querySelector('[data-tl-scrubber-dots]');
-      const scrubberThumb = root.querySelector('[data-tl-scrubber-thumb]');
-      const filterBtns = root.querySelectorAll('[data-tl-filter]');
-      const zoomBtns = root.querySelectorAll('[data-tl-zoom]');
-      const yearBtns = root.querySelectorAll('[data-tl-year]');
-
-      // Detail elements
-      const detailCard = root.querySelector('[data-tl-detail]');
-      const detailDate = root.querySelector('[data-tl-detail-date]');
-      const detailCat = root.querySelector('[data-tl-detail-cat]');
-      const detailTemplate = root.querySelector('[data-tl-detail-template]');
-      const detailIndex = root.querySelector('[data-tl-detail-index]');
-      const detailTitle = root.querySelector('[data-tl-detail-title]');
-      const detailSubtitle = root.querySelector('[data-tl-detail-subtitle]');
-      const detailSummary = root.querySelector('[data-tl-detail-summary]');
-      const detailPointsWrap = root.querySelector('[data-tl-detail-points-wrap]');
-      const detailPoints = root.querySelector('[data-tl-detail-points]');
-      const detailTags = root.querySelector('[data-tl-detail-tags]');
-      const detailLinks = root.querySelector('[data-tl-detail-links]');
-
+      const stage = q('[data-tl-stage]');
+      const track = q('[data-tl-track]');
       if (!stage || !track) return;
 
-      let activeCategory = 'all';
-      let zoomKey = root.dataset.compact === 'true' ? 'compact' : 'standard';
-      let spacing = ZOOM_SPACINGS[zoomKey];
-      let visibleNodes = [...allNodes];
-      let activeIndex = Math.max(0, visibleNodes.length - 1);
+      const yearBig = q('[data-tl-year-big]');
+      const headEl = q('.chron-head');
+      const focusDate = q('[data-tl-focus-date]');
+      const emptyEl = q('[data-tl-empty]');
+      const hintEl = q('[data-tl-hint]');
+      const counter = q('[data-tl-counter]');
+      const prevBtn = q('[data-tl-prev]');
+      const nextBtn = q('[data-tl-next]');
+      const scrub = q('[data-tl-scrub]');
+      const scrubFill = q('[data-tl-scrub-fill]');
+      const scrubTicks = q('[data-tl-scrub-ticks]');
+      const scrubThumb = q('[data-tl-scrub-thumb]');
+      const yearsEl = q('[data-tl-years]');
+      const filterBtns = root.querySelectorAll('[data-tl-filter]');
+      const zoomBtns = root.querySelectorAll('[data-tl-zoom]');
 
-      let stageWidth = stage.clientWidth || 720;
-      let maxX = Math.max(0, (visibleNodes.length - 1) * spacing);
-      let currentX = maxX;
-      let targetX = maxX;
+      const detail = q('[data-tl-detail]');
+      const d = {
+        no: q('[data-tl-d-no]'),
+        date: q('[data-tl-d-date]'),
+        cat: q('[data-tl-d-cat]'),
+        tpl: q('[data-tl-d-tpl]'),
+        title: q('[data-tl-d-title]'),
+        sub: q('[data-tl-d-sub]'),
+        summary: q('[data-tl-d-summary]'),
+        pointsWrap: q('[data-tl-d-points-wrap]'),
+        points: q('[data-tl-d-points]'),
+        tags: q('[data-tl-d-tags]'),
+        linksWrap: q('[data-tl-d-links-wrap]'),
+        links: q('[data-tl-d-links]'),
+      };
+
+      let spacing = root.dataset.compact === 'true' ? SPACING.compact : SPACING.standard;
+      let visible = allNodes.slice();
+      let nodeEls = [];
+      let yearBtnEls = [];
+      let activeIndex = -1;
+      let shownYear = null;
+      let swapTimer = null;
+
+      let stageW = stage.clientWidth || 800;
+      let maxX = 0;
+      let currentX = 0;
+      let targetX = 0;
       let velocity = 0;
 
-      let isDraggingStage = false;
-      let isDraggingScrubber = false;
+      let dragging = false;
+      let scrubbing = false;
       let pointerId = null;
-      let lastClientX = 0;
-      let lastMoveTime = 0;
-      let dragDistance = 0;
-      let pressedNodeIndex = null;
-      let wheelSnapTimer = null;
-      let rafId = null;
-      let hasInteracted = false;
+      let lastX = 0;
+      let lastT = 0;
+      let travel = 0;
+      let pressedIndex = null;
+      let wheelTimer = null;
+      let raf = null;
+      let interacted = false;
 
-      const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
+      const nodeX = (i) => i * spacing;
+      const pct = (i) => (visible.length > 1 ? (i / (visible.length - 1)) * 100 : 50);
+      const nearestIndex = (x) => clamp(Math.round(x / spacing), 0, Math.max(0, visible.length - 1));
 
-      const hideDragHint = () => {
-        if (!hasInteracted && dragHintEl) {
-          hasInteracted = true;
-          dragHintEl.style.opacity = '0';
-        }
+      const markInteracted = () => {
+        if (interacted || !hintEl) return;
+        interacted = true;
+        hintEl.style.opacity = '0';
       };
 
-      const nodeX = (idx) => idx * spacing;
-
-      const updateDetailPanel = (idx) => {
-        const node = visibleNodes[idx];
-        if (!detailCard) return;
-        if (!node) {
-          detailCard.classList.add('hidden');
-          return;
+      const fillDetail = (n) => {
+        if (!detail) return;
+        if (d.no) d.no.textContent = n.no;
+        if (d.date) d.date.textContent = n.displayDate;
+        if (d.cat) d.cat.innerHTML = `<span class="glyph">${glyphs[n.category] || ''}</span>${esc(n.categoryLabel)}`;
+        if (d.tpl) d.tpl.classList.toggle('hidden', !n.isTemplate);
+        if (d.title) d.title.textContent = n.title;
+        if (d.sub) {
+          d.sub.textContent = n.subtitle || '';
+          d.sub.classList.toggle('hidden', !n.subtitle);
         }
-        detailCard.classList.remove('hidden');
-
-        if (detailDate) {
-          detailDate.textContent = node.displayDate;
-          detailDate.style.color = node.color;
-          detailDate.style.backgroundColor = `color-mix(in srgb, ${node.color} 14%, transparent)`;
+        if (d.summary) d.summary.textContent = n.summary;
+        if (d.pointsWrap && d.points) {
+          d.pointsWrap.classList.toggle('hidden', !n.details.length);
+          d.points.innerHTML = n.details.map((p) => `<li>${esc(p)}</li>`).join('');
         }
-        if (detailCat) {
-          detailCat.innerHTML = `<span class="h-1.5 w-1.5 rounded-full" style="background-color:${node.color}"></span>${escapeHtml(node.categoryLabel)}`;
-        }
-        if (detailTemplate) {
-          detailTemplate.classList.toggle('hidden', !node.isTemplate);
-        }
-        if (detailIndex) {
-          const cur = String(idx + 1).padStart(2, '0');
-          const tot = String(visibleNodes.length).padStart(2, '0');
-          detailIndex.textContent = `#${cur} / ${tot}`;
-        }
-        if (detailTitle) detailTitle.textContent = node.title;
-        if (detailSubtitle) {
-          detailSubtitle.textContent = node.subtitle || '';
-          detailSubtitle.classList.toggle('hidden', !node.subtitle);
-        }
-        if (detailSummary) detailSummary.textContent = node.summary;
-
-        if (detailPointsWrap && detailPoints) {
-          const pts = node.details || [];
-          detailPointsWrap.classList.toggle('hidden', pts.length === 0);
-          detailPoints.innerHTML = pts
-            .map(
-              (pt) =>
-                `<li class="flex items-start gap-2.5"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full" style="background-color:${node.color}"></span><span>${escapeHtml(pt)}</span></li>`
-            )
-            .join('');
-        }
-
-        if (detailTags) {
-          detailTags.innerHTML = (node.tags || [])
-            .map(
-              (tag) =>
-                `<span class="rounded bg-[var(--bg-subtle)] px-2 py-0.5 font-mono-meta text-[11px] text-[var(--fg-muted)]">${escapeHtml(tag)}</span>`
-            )
-            .join('');
-        }
-
-        if (detailLinks) {
-          detailLinks.innerHTML = (node.links || [])
-            .map((link) => {
-              const extAttrs = link.external ? ' target="_blank" rel="noopener noreferrer"' : '';
-              const extIcon = link.external
-                ? '<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>'
-                : '';
-              return `<a href="${escapeHtml(link.href)}"${extAttrs} class="pill-action"><span>${escapeHtml(link.label)}</span>${extIcon}</a>`;
+        if (d.tags) d.tags.innerHTML = n.tags.map((tg) => `<li>${esc(tg)}</li>`).join('');
+        if (d.linksWrap && d.links) {
+          d.linksWrap.classList.toggle('hidden', !n.links.length);
+          d.links.innerHTML = n.links
+            .map((l) => {
+              const ext = l.external ? ' target="_blank" rel="noopener noreferrer"' : '';
+              return `<li><a class="chron-link" href="${esc(l.href)}"${ext}><span>${esc(l.label)}</span><span aria-hidden="true">${l.external ? '↗' : '→'}</span></a></li>`;
             })
             .join('');
         }
       };
 
-      const syncActiveVisuals = (idx) => {
-        const node = visibleNodes[idx];
-        if (focusDateEl) {
-          focusDateEl.textContent = node ? node.shortDate : '—';
+      const setActive = (idx, immediate) => {
+        const n = visible[idx];
+        activeIndex = idx;
+
+        if (counter) {
+          counter.innerHTML = n
+            ? `${esc(n.no)}<i> / ${pad(allNodes.length)}</i>`
+            : `—<i> / ${pad(allNodes.length)}</i>`;
         }
-        if (counterEl) {
-          counterEl.textContent = visibleNodes.length
-            ? `${idx + 1} / ${visibleNodes.length}`
-            : '0 / 0';
+        if (prevBtn) prevBtn.disabled = !n || idx <= 0;
+        if (nextBtn) nextBtn.disabled = !n || idx >= visible.length - 1;
+        if (focusDate) focusDate.textContent = n ? n.shortDate : '';
+        if (scrub && n) scrub.setAttribute('aria-valuenow', String(idx + 1));
+
+        nodeEls.forEach((el, i) => el.classList.toggle('is-active', i === idx));
+
+        if (n && yearBig && n.year !== shownYear) {
+          shownYear = n.year;
+          const span = yearBig.querySelector('span');
+          if (span) span.textContent = String(n.year);
+          yearBig.classList.remove('is-entering');
+          void yearBig.offsetWidth;
+          yearBig.classList.add('is-entering');
         }
-        if (prevBtn) prevBtn.disabled = idx <= 0 || visibleNodes.length === 0;
-        if (nextBtn) nextBtn.disabled = idx >= visibleNodes.length - 1 || visibleNodes.length === 0;
+        yearBtnEls.forEach((b) => b.classList.toggle('is-active', Boolean(n) && Number(b.dataset.year) === n.year));
 
-        if (scrubberTrack && visibleNodes.length > 0) {
-          scrubberTrack.setAttribute('aria-valuemax', String(visibleNodes.length));
-          scrubberTrack.setAttribute('aria-valuenow', String(idx + 1));
-        }
-
-        track.querySelectorAll('[data-node-index]').forEach((el) => {
-          const i = Number(el.getAttribute('data-node-index'));
-          const isAct = i === idx;
-          const card = el.querySelector('.timeline-card');
-          const dot = el.querySelector('.timeline-dot');
-          if (card) {
-            card.classList.toggle('is-active', isAct);
-            card.style.opacity = isAct ? '1' : '0.78';
-          }
-          if (dot) {
-            dot.classList.toggle('is-active', isAct);
-          }
-        });
-
-        yearBtns.forEach((btn) => {
-          const y = Number(btn.getAttribute('data-tl-year'));
-          const isCurYear = node && node.year === y;
-          btn.classList.toggle('bg-[var(--accent-soft)]', Boolean(isCurYear));
-          btn.classList.toggle('text-[var(--accent)]', Boolean(isCurYear));
-          btn.classList.toggle('font-semibold', Boolean(isCurYear));
-        });
-
-        updateDetailPanel(idx);
-      };
-
-      const renderTrack = () => {
-        maxX = Math.max(0, (visibleNodes.length - 1) * spacing);
-        const isEmpty = visibleNodes.length === 0;
-        if (emptyEl) {
-          emptyEl.classList.toggle('hidden', !isEmpty);
-          emptyEl.classList.toggle('flex', isEmpty);
-        }
-        if (isEmpty) {
-          track.innerHTML = '';
-          if (scrubberDots) scrubberDots.innerHTML = '';
-          syncActiveVisuals(-1);
+        if (!detail) return;
+        if (!n) {
+          detail.classList.add('hidden');
           return;
         }
+        detail.classList.remove('hidden');
+        if (swapTimer) clearTimeout(swapTimer);
+        if (immediate) {
+          detail.classList.remove('is-swapping');
+          fillDetail(n);
+          return;
+        }
+        detail.classList.add('is-swapping');
+        swapTimer = setTimeout(() => {
+          fillDetail(visible[activeIndex] || n);
+          detail.classList.remove('is-swapping');
+        }, 170);
+      };
 
-        const railLeft = -600;
-        const railWidth = maxX + 1200;
+      const render = () => {
+        maxX = Math.max(0, (visible.length - 1) * spacing);
+        const empty = visible.length === 0;
+        if (emptyEl) emptyEl.classList.toggle('hidden', !empty);
 
-        let html = `
-          <div
-            class="pointer-events-none absolute top-1/2 -translate-y-1/2"
-            style="left:${railLeft}px; width:${railWidth}px; height:2px; background-color:var(--border-strong);"
-          ></div>
-          <div
-            class="pointer-events-none absolute top-1/2 -translate-y-1/2 opacity-55"
-            style="left:${railLeft}px; width:${railWidth}px; height:12px; background-image:repeating-linear-gradient(to right, var(--border-strong) 0 1px, transparent 1px 22px);"
-          ></div>
-        `;
-
-        let prevYear = null;
-        visibleNodes.forEach((node, idx) => {
-          const x = nodeX(idx);
-          const isTop = idx % 2 === 0;
-          const showYearMarker = node.year !== prevYear;
-          prevYear = node.year;
-
-          if (showYearMarker) {
-            const markerLeft = idx === 0 ? x - 62 : x - spacing * 0.48;
-            html += `
-              <div
-                class="pointer-events-none absolute top-1/2 z-10 -translate-x-1/2 -translate-y-1/2"
-                style="left:${markerLeft}px;"
-              >
-                <span
-                  class="rounded border border-[var(--border-strong)] px-1.5 py-0.5 font-mono-meta text-[10px] font-semibold tracking-wider text-[var(--fg-muted)]"
-                  style="background-color:var(--bg);"
-                >${node.year}</span>
-              </div>
-            `;
-          }
-
-          const cardPosStyle = isTop
-            ? 'bottom: calc(50% + 22px);'
-            : 'top: calc(50% + 22px);';
-          const stemPosStyle = isTop
-            ? 'bottom: 50%; height: 22px;'
-            : 'top: 50%; height: 22px;';
-          const railDatePosStyle = isTop
-            ? 'top: calc(50% + 14px);'
-            : 'bottom: calc(50% + 14px);';
-
-          const templateTag = node.isTemplate
-            ? `<span class="rounded-full border px-1.5 py-0.5 font-mono-meta text-[9px] leading-none" style="border-color:var(--warn-border);background-color:var(--warn-bg);color:var(--warn-fg);">${escapeHtml(i18n.templateBadge || 'Template')}</span>`
-            : '';
-
+        let html = `<div class="chron-ticks" style="left:-1200px;width:${maxX + 2400}px"></div>`;
+        visible.forEach((n, i) => {
+          const dir = i % 2 === 0 ? 'up' : 'down';
+          const g = glyphs[n.category] || '';
+          const tpl = n.isTemplate ? ` <span class="chron-entry-tpl">· ${esc(i18n.templateBadge || '')}</span>` : '';
           html += `
-            <div
-              data-node-index="${idx}"
-              class="absolute inset-y-0"
-              style="left:${x}px; --node-color:${node.color};"
-            >
-              <!-- Vertical stem -->
-              <div
-                class="pointer-events-none absolute left-0 w-px -translate-x-1/2"
-                style="${stemPosStyle} background-color: color-mix(in srgb, ${node.color} 55%, var(--border));"
-              ></div>
-
-              <!-- Center axis dot -->
-              <button
-                type="button"
-                aria-label="${escapeHtml(node.shortDate + ' ' + node.title)}"
-                class="timeline-dot absolute top-1/2 left-0 z-20 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 cursor-pointer rounded-full border-2 border-[var(--bg-elevated)]"
-                style="background-color:${node.color};"
-              ></button>
-
-              <!-- Date label opposite to card -->
-              <span
-                class="pointer-events-none absolute left-0 -translate-x-1/2 whitespace-nowrap font-mono-meta text-[10px] font-medium text-[var(--fg-faint)]"
-                style="${railDatePosStyle}"
-              >${escapeHtml(node.shortDate)}</span>
-
-              <!-- Node Card -->
-              <div
-                role="button"
-                tabindex="-1"
-                class="timeline-card absolute left-0 w-[216px] -translate-x-1/2 cursor-pointer rounded-xl p-3 sm:w-[244px] sm:p-3.5"
-                style="${cardPosStyle}"
-              >
-                <div class="flex items-center justify-between gap-1.5">
-                  <span
-                    class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono-meta text-[10px] font-medium"
-                    style="background-color: color-mix(in srgb, ${node.color} 14%, transparent); color:${node.color};"
-                  >${escapeHtml(node.categoryLabel)}</span>
-                  ${templateTag}
-                </div>
-                <h4 class="mt-1.5 line-clamp-2 font-serif-display text-[0.94rem] font-semibold leading-snug text-[var(--fg)]">
-                  ${escapeHtml(node.title)}
-                </h4>
-                <p class="mt-1 line-clamp-2 text-[11.5px] leading-relaxed text-[var(--fg-muted)]">
-                  ${escapeHtml(node.summary)}
-                </p>
+            <div class="chron-node chron-node--${dir}" data-node-index="${i}" style="left:${nodeX(i)}px">
+              <span class="chron-marker">${g}</span>
+              <div class="chron-entry">
+                <div class="chron-entry-meta"><span>No.&nbsp;${esc(n.no)}</span><span>${esc(n.shortDate)}</span></div>
+                <h4 class="chron-entry-title">${esc(n.title)}</h4>
+                <p class="chron-entry-cat"><span class="glyph">${g}</span>${esc(n.categoryLabel)}${tpl}</p>
               </div>
-            </div>
-          `;
+            </div>`;
         });
+        track.innerHTML = empty ? '' : html;
+        nodeEls = Array.from(track.querySelectorAll('.chron-node'));
 
-        track.innerHTML = html;
-
-        // Render mini dots on scrubber bar
-        if (scrubberDots) {
-          scrubberDots.innerHTML = visibleNodes
-            .map((node, idx) => {
-              const pct = visibleNodes.length > 1 ? (idx / (visibleNodes.length - 1)) * 100 : 50;
-              return `<span class="absolute top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[var(--bg-elevated)]" style="left:${pct}%; background-color:${node.color};"></span>`;
-            })
+        if (scrubTicks) {
+          scrubTicks.innerHTML = visible
+            .map((_, i) => `<span class="chron-scrub-tick" style="left:${pct(i)}%"></span>`)
             .join('');
         }
+
+        renderYears();
       };
 
-      const applyTransform = () => {
-        const translateX = stageWidth / 2 - currentX;
-        track.style.transform = `translate3d(${translateX}px, 0, 0)`;
+      const renderYears = () => {
+        if (!yearsEl) return;
+        const width = yearsEl.clientWidth || 320;
+        const seen = new Set();
+        let lastPx = -Infinity;
+        let yh = '';
+        visible.forEach((n, i) => {
+          if (seen.has(n.year)) return;
+          seen.add(n.year);
+          const px = (pct(i) / 100) * width;
+          if (px - lastPx < 58) return;
+          lastPx = px;
+          yh += `<button type="button" class="chron-scrub-year" data-jump="${i}" data-year="${n.year}" style="left:${pct(i)}%">${n.year}</button>`;
+        });
+        yearsEl.innerHTML = yh;
+        yearBtnEls = Array.from(yearsEl.querySelectorAll('[data-jump]'));
+        const cur = visible[activeIndex];
+        yearBtnEls.forEach((b) => b.classList.toggle('is-active', Boolean(cur) && Number(b.dataset.year) === cur.year));
+      };
+
+      /* Focus anchor: centred on wide screens, shifted left on narrow ones so entries stay readable */
+      const anchorX = () => Math.min(stageW / 2, Math.max(20, stageW - 250));
+
+      const apply = () => {
+        const anchor = anchorX();
+        track.style.transform = `translate3d(${anchor - currentX}px,0,0)`;
+        if (headEl) headEl.style.left = `${anchor}px`;
 
         const progress = maxX > 0 ? clamp(currentX / maxX, 0, 1) : 1;
-        const pct = progress * 100;
-        if (scrubberThumb) scrubberThumb.style.left = `${pct}%`;
-        if (scrubberFill) scrubberFill.style.width = `${pct}%`;
+        if (scrubThumb) scrubThumb.style.left = `${progress * 100}%`;
+        if (scrubFill) scrubFill.style.width = `${progress * 100}%`;
 
-        if (visibleNodes.length > 0) {
-          const nearest = clamp(Math.round(currentX / spacing), 0, visibleNodes.length - 1);
-          if (nearest !== activeIndex) {
-            activeIndex = nearest;
-            syncActiveVisuals(activeIndex);
-          }
+        const range = Math.max(280, stageW * 0.52);
+        for (let i = 0; i < nodeEls.length; i++) {
+          const dist = Math.abs(nodeX(i) - currentX);
+          nodeEls[i].style.opacity = Math.max(0.2, 1 - dist / range).toFixed(3);
+        }
+
+        if (visible.length) {
+          const near = nearestIndex(currentX);
+          if (near !== activeIndex) setActive(near, false);
         }
       };
 
       const tick = () => {
-        let shouldContinue = false;
-
-        if (!isDraggingStage && !isDraggingScrubber) {
+        let more = false;
+        if (!dragging && !scrubbing) {
           if (Math.abs(velocity) > 0.25) {
             currentX += velocity;
-            velocity *= 0.91;
-
-            // Elastic resistance past boundaries during flick
-            if (currentX < 0) {
-              currentX *= 0.72;
-              velocity *= 0.5;
-            } else if (currentX > maxX) {
-              currentX = maxX + (currentX - maxX) * 0.72;
+            velocity *= 0.92;
+            if (currentX < 0 || currentX > maxX) {
+              const edge = currentX < 0 ? 0 : maxX;
+              currentX = edge + (currentX - edge) * 0.7;
               velocity *= 0.5;
             }
-
             if (Math.abs(velocity) <= 0.45) {
               velocity = 0;
-              const nearest = clamp(Math.round(currentX / spacing), 0, visibleNodes.length - 1);
-              targetX = nodeX(nearest);
+              targetX = nodeX(nearestIndex(currentX));
             }
-            shouldContinue = true;
+            more = true;
           } else {
             const diff = targetX - currentX;
-            if (Math.abs(diff) > 0.35) {
-              currentX += diff * 0.16;
-              shouldContinue = true;
+            if (Math.abs(diff) > 0.3) {
+              currentX += diff * 0.14;
+              more = true;
             } else {
               currentX = targetX;
             }
           }
-          applyTransform();
+          apply();
         }
-
-        if (shouldContinue) {
-          rafId = requestAnimationFrame(tick);
-        } else {
-          rafId = null;
-        }
+        raf = more ? requestAnimationFrame(tick) : null;
       };
 
-      const startLoop = () => {
-        if (rafId === null) {
-          rafId = requestAnimationFrame(tick);
-        }
+      const loop = () => {
+        if (raf === null) raf = requestAnimationFrame(tick);
       };
 
-      const selectNode = (idx, immediate = false) => {
-        if (!visibleNodes.length) return;
-        const clamped = clamp(idx, 0, visibleNodes.length - 1);
-        activeIndex = clamped;
+      const go = (idx, immediate) => {
+        if (!visible.length) return;
+        const i = clamp(idx, 0, visible.length - 1);
         velocity = 0;
-        targetX = nodeX(clamped);
+        targetX = nodeX(i);
         if (immediate) {
           currentX = targetX;
-          applyTransform();
+          setActive(i, true);
+          apply();
         } else {
-          startLoop();
+          if (i !== activeIndex) setActive(i, false);
+          loop();
         }
-        syncActiveVisuals(clamped);
       };
 
-      // Stage pointer drag (mouse + touch)
+      /* Drag the stage */
       stage.addEventListener('pointerdown', (e) => {
-        if (e.button !== 0 && e.pointerType === 'mouse') return;
-        if (!visibleNodes.length) return;
-
-        isDraggingStage = true;
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        if (!visible.length) return;
+        dragging = true;
         pointerId = e.pointerId;
-        lastClientX = e.clientX;
-        lastMoveTime = performance.now();
-        dragDistance = 0;
+        lastX = e.clientX;
+        lastT = performance.now();
+        travel = 0;
         velocity = 0;
-
         const nodeEl = e.target.closest('[data-node-index]');
-        pressedNodeIndex = nodeEl ? Number(nodeEl.getAttribute('data-node-index')) : null;
-
+        pressedIndex = nodeEl ? Number(nodeEl.getAttribute('data-node-index')) : null;
         stage.classList.add('is-dragging');
         try {
           stage.setPointerCapture(e.pointerId);
@@ -853,250 +513,167 @@ const payloadJson = JSON.stringify({
       });
 
       stage.addEventListener('pointermove', (e) => {
-        if (!isDraggingStage || e.pointerId !== pointerId) return;
-        const dx = e.clientX - lastClientX;
+        if (!dragging || e.pointerId !== pointerId) return;
+        const dx = e.clientX - lastX;
         const now = performance.now();
-        const dt = Math.max(1, now - lastMoveTime);
+        const dt = Math.max(1, now - lastT);
+        travel += Math.abs(dx);
+        if (travel > 6) markInteracted();
 
-        dragDistance += Math.abs(dx);
-        if (dragDistance > 5) hideDragHint();
-
-        // Apply elastic dampening past bounds
         let delta = -dx;
-        if ((currentX < 0 && delta < 0) || (currentX > maxX && delta > 0)) {
-          delta *= 0.3;
-        }
+        if ((currentX < 0 && delta < 0) || (currentX > maxX && delta > 0)) delta *= 0.3;
         currentX += delta;
         targetX = currentX;
+        velocity = velocity * 0.55 + ((-dx / dt) * 16) * 0.45;
 
-        // Exponentially smoothed velocity (px per 16ms frame)
-        const instVel = (-dx / dt) * 16;
-        velocity = velocity * 0.55 + instVel * 0.45;
-
-        lastClientX = e.clientX;
-        lastMoveTime = now;
-        applyTransform();
+        lastX = e.clientX;
+        lastT = now;
+        apply();
       });
 
-      const endStageDrag = (e) => {
-        if (!isDraggingStage || (pointerId !== null && e.pointerId !== pointerId)) return;
-        isDraggingStage = false;
+      const endDrag = (e) => {
+        if (!dragging || (pointerId !== null && e.pointerId !== pointerId)) return;
+        dragging = false;
+        pointerId = null;
         stage.classList.remove('is-dragging');
         try {
           stage.releasePointerCapture(e.pointerId);
         } catch {}
-        pointerId = null;
 
-        // Distinguish click vs drag
-        if (dragDistance <= 6 && pressedNodeIndex !== null) {
-          hideDragHint();
-          selectNode(pressedNodeIndex);
-          pressedNodeIndex = null;
+        if (travel <= 6 && pressedIndex !== null) {
+          markInteracted();
+          go(pressedIndex, false);
+          pressedIndex = null;
           return;
         }
-        pressedNodeIndex = null;
-
-        // Snap directly if velocity is tiny or out of bounds
+        pressedIndex = null;
         if (currentX < 0 || currentX > maxX || Math.abs(velocity) < 0.8) {
           velocity = 0;
-          const nearest = clamp(Math.round(currentX / spacing), 0, visibleNodes.length - 1);
-          targetX = nodeX(nearest);
+          targetX = nodeX(nearestIndex(currentX));
         }
-        startLoop();
+        loop();
       };
+      stage.addEventListener('pointerup', endDrag);
+      stage.addEventListener('pointercancel', endDrag);
 
-      stage.addEventListener('pointerup', endStageDrag);
-      stage.addEventListener('pointercancel', endStageDrag);
-
-      // Horizontal trackpad swipe or Shift + mouse wheel
+      /* Trackpad / shift-wheel */
       stage.addEventListener(
         'wheel',
         (e) => {
-          if (!visibleNodes.length) return;
-          const isHorizontalIntent = Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey;
-          if (!isHorizontalIntent) return;
-
+          if (!visible.length) return;
+          const horizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey;
+          if (!horizontal) return;
           e.preventDefault();
-          hideDragHint();
+          markInteracted();
           const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
           velocity = 0;
-          targetX = clamp(targetX + delta * 1.05, 0, maxX);
-          startLoop();
-
-          if (wheelSnapTimer) clearTimeout(wheelSnapTimer);
-          wheelSnapTimer = setTimeout(() => {
-            const nearest = clamp(Math.round(targetX / spacing), 0, visibleNodes.length - 1);
-            targetX = nodeX(nearest);
-            startLoop();
-          }, 170);
+          targetX = clamp(targetX + delta, 0, maxX);
+          loop();
+          if (wheelTimer) clearTimeout(wheelTimer);
+          wheelTimer = setTimeout(() => {
+            targetX = nodeX(nearestIndex(targetX));
+            loop();
+          }, 160);
         },
         { passive: false }
       );
 
-      // Keyboard navigation when stage is focused
+      /* Keyboard */
       stage.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowLeft') {
-          e.preventDefault();
-          hideDragHint();
-          selectNode(activeIndex - 1);
-        } else if (e.key === 'ArrowRight') {
-          e.preventDefault();
-          hideDragHint();
-          selectNode(activeIndex + 1);
-        } else if (e.key === 'Home') {
-          e.preventDefault();
-          selectNode(0);
-        } else if (e.key === 'End') {
-          e.preventDefault();
-          selectNode(visibleNodes.length - 1);
-        }
+        const map = { ArrowLeft: activeIndex - 1, ArrowRight: activeIndex + 1, Home: 0, End: visible.length - 1 };
+        if (!(e.key in map)) return;
+        e.preventDefault();
+        markInteracted();
+        go(map[e.key], false);
       });
 
-      // Scrubber bar drag & click-to-jump
-      if (scrubberTrack) {
-        const scrubToClientX = (clientX) => {
-          if (!visibleNodes.length) return;
-          const rect = scrubberTrack.getBoundingClientRect();
+      /* Scrubber */
+      if (scrub) {
+        const scrubTo = (clientX) => {
+          if (!visible.length) return;
+          const rect = scrub.getBoundingClientRect();
           if (rect.width <= 0) return;
-          const ratio = clamp((clientX - rect.left) / rect.width, 0, 1);
           velocity = 0;
-          currentX = ratio * maxX;
+          currentX = clamp((clientX - rect.left) / rect.width, 0, 1) * maxX;
           targetX = currentX;
-          applyTransform();
+          apply();
         };
-
-        scrubberTrack.addEventListener('pointerdown', (e) => {
-          if (e.button !== 0 && e.pointerType === 'mouse') return;
-          if (!visibleNodes.length) return;
-          isDraggingScrubber = true;
-          hideDragHint();
-          if (scrubberThumb) scrubberThumb.classList.add('is-dragging');
+        scrub.addEventListener('pointerdown', (e) => {
+          if (e.pointerType === 'mouse' && e.button !== 0) return;
+          if (!visible.length) return;
+          scrubbing = true;
+          markInteracted();
+          if (scrubThumb) scrubThumb.classList.add('is-dragging');
           try {
-            scrubberTrack.setPointerCapture(e.pointerId);
+            scrub.setPointerCapture(e.pointerId);
           } catch {}
-          scrubToClientX(e.clientX);
+          scrubTo(e.clientX);
         });
-
-        scrubberTrack.addEventListener('pointermove', (e) => {
-          if (!isDraggingScrubber) return;
-          scrubToClientX(e.clientX);
+        scrub.addEventListener('pointermove', (e) => {
+          if (scrubbing) scrubTo(e.clientX);
         });
-
         const endScrub = (e) => {
-          if (!isDraggingScrubber) return;
-          isDraggingScrubber = false;
-          if (scrubberThumb) scrubberThumb.classList.remove('is-dragging');
+          if (!scrubbing) return;
+          scrubbing = false;
+          if (scrubThumb) scrubThumb.classList.remove('is-dragging');
           try {
-            scrubberTrack.releasePointerCapture(e.pointerId);
+            scrub.releasePointerCapture(e.pointerId);
           } catch {}
-          const nearest = clamp(Math.round(currentX / spacing), 0, visibleNodes.length - 1);
-          selectNode(nearest);
+          go(nearestIndex(currentX), false);
         };
-
-        scrubberTrack.addEventListener('pointerup', endScrub);
-        scrubberTrack.addEventListener('pointercancel', endScrub);
+        scrub.addEventListener('pointerup', endScrub);
+        scrub.addEventListener('pointercancel', endScrub);
       }
 
-      // Prev / Next buttons
-      if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
-          hideDragHint();
-          selectNode(activeIndex - 1);
-        });
-      }
-      if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
-          hideDragHint();
-          selectNode(activeIndex + 1);
+      if (yearsEl) {
+        yearsEl.addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-jump]');
+          if (!btn) return;
+          markInteracted();
+          go(Number(btn.dataset.jump), false);
         });
       }
 
-      // Category filter pills
+      if (prevBtn) prevBtn.addEventListener('click', () => go(activeIndex - 1, false));
+      if (nextBtn) nextBtn.addEventListener('click', () => go(activeIndex + 1, false));
+
       filterBtns.forEach((btn) => {
         btn.addEventListener('click', () => {
-          activeCategory = btn.getAttribute('data-tl-filter') || 'all';
-          filterBtns.forEach((b) => {
-            const active = b === btn;
-            b.classList.toggle('border-[var(--accent)]', active);
-            b.classList.toggle('bg-[var(--accent-soft)]', active);
-            b.classList.toggle('font-medium', active);
-            b.classList.toggle('text-[var(--accent)]', active);
-            b.classList.toggle('border-[var(--border)]', !active);
-            b.classList.toggle('bg-[var(--bg-elevated)]', !active);
-            b.classList.toggle('text-[var(--fg-muted)]', !active);
-          });
-
-          visibleNodes =
-            activeCategory === 'all'
-              ? [...allNodes]
-              : allNodes.filter((n) => n.category === activeCategory);
-
-          renderTrack();
-          if (visibleNodes.length > 0) {
-            selectNode(visibleNodes.length - 1, true);
-          }
+          const key = btn.getAttribute('data-tl-filter') || 'all';
+          filterBtns.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+          visible = key === 'all' ? allNodes.slice() : allNodes.filter((n) => n.category === key);
+          activeIndex = -1;
+          render();
+          if (visible.length) go(visible.length - 1, true);
+          else setActive(-1, true);
         });
       });
 
-      // Zoom spacing buttons
       zoomBtns.forEach((btn) => {
         btn.addEventListener('click', () => {
-          const nextZoom = btn.getAttribute('data-tl-zoom');
-          if (!nextZoom || !ZOOM_SPACINGS[nextZoom]) return;
-          zoomKey = nextZoom;
-          spacing = ZOOM_SPACINGS[zoomKey];
-
-          zoomBtns.forEach((b) => {
-            const active = b === btn;
-            b.classList.toggle('bg-[var(--accent-soft)]', active);
-            b.classList.toggle('font-medium', active);
-            b.classList.toggle('text-[var(--accent)]', active);
-            b.classList.toggle('text-[var(--fg-muted)]', !active);
-          });
-
-          const keepIndex = activeIndex;
-          renderTrack();
-          selectNode(keepIndex, true);
+          const key = btn.getAttribute('data-tl-zoom');
+          if (!key || !SPACING[key]) return;
+          zoomBtns.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+          spacing = SPACING[key];
+          const keep = activeIndex;
+          activeIndex = -1;
+          render();
+          go(keep, true);
         });
       });
 
-      // Year quick-jump buttons
-      yearBtns.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const targetYear = Number(btn.getAttribute('data-tl-year'));
-          let idx = visibleNodes.findIndex((n) => n.year === targetYear);
-          if (idx === -1 && activeCategory !== 'all') {
-            // Reset filter to All so jumping to any year always works
-            const allBtn = root.querySelector('[data-tl-filter="all"]');
-            if (allBtn) allBtn.click();
-            idx = visibleNodes.findIndex((n) => n.year === targetYear);
-          }
-          if (idx !== -1) {
-            hideDragHint();
-            selectNode(idx);
-          }
-        });
-      });
+      const onResize = () => {
+        stageW = stage.clientWidth || 800;
+        renderYears();
+        apply();
+      };
+      if (typeof ResizeObserver !== 'undefined') new ResizeObserver(onResize).observe(stage);
+      else window.addEventListener('resize', onResize);
 
-      // Keep stage centered accurately on resize
-      if (typeof ResizeObserver !== 'undefined') {
-        const ro = new ResizeObserver(() => {
-          stageWidth = stage.clientWidth || 720;
-          applyTransform();
-        });
-        ro.observe(stage);
-      } else {
-        window.addEventListener('resize', () => {
-          stageWidth = stage.clientWidth || 720;
-          applyTransform();
-        });
-      }
-
-      // Initial render (supports URL hash #node-id deep-linking)
-      renderTrack();
-      const hashId = window.location.hash ? window.location.hash.slice(1) : '';
-      const hashIdx = hashId ? visibleNodes.findIndex((n) => n.id === hashId) : -1;
-      selectNode(hashIdx !== -1 ? hashIdx : visibleNodes.length - 1, true);
+      render();
+      const hash = window.location.hash.slice(1);
+      const hashIdx = hash ? visible.findIndex((n) => n.id === hash) : -1;
+      go(hashIdx !== -1 ? hashIdx : visible.length - 1, true);
     });
   })();
 </script>

@@ -1,0 +1,35 @@
+---
+interface Props {
+  kicker: string;
+  title: string;
+  titleEm?: string;
+  lede?: string;
+  meta?: string;
+}
+
+const { kicker, title, titleEm, lede, meta } = Astro.props;
+---
+
+<header class="pt-8 md:pt-14">
+  <div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-ink pb-3">
+    <p class="eyebrow">{kicker}</p>
+    {meta && <p class="eyebrow">{meta}</p>}
+  </div>
+  <div class="mt-10 grid grid-cols-12 items-end gap-x-8 gap-y-6 md:mt-14">
+    <h1 class="display rise col-span-12 text-[clamp(3.4rem,9.5vw,8rem)] leading-[0.88] text-ink lg:col-span-8">
+      {title}
+      {titleEm && (
+        <>
+          {' '}
+          <em>{titleEm}</em>
+        </>
+      )}
+    </h1>
+    {lede && (
+      <p class="rise rise-2 col-span-12 text-[1.08rem] leading-relaxed text-ink-2 lg:col-span-4 lg:pb-3">
+        {lede}
+      </p>
+    )}
+  </div>
+  <slot />
+</header>

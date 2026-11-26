@@ -2,7 +2,6 @@
 import { profile } from '../data/profile';
 import { ui } from '../i18n/ui';
 import type { Locale } from '../utils/paths';
-import Icons from './Icons.astro';
 
 interface Props {
   lang: Locale;
@@ -10,46 +9,53 @@ interface Props {
 
 const { lang } = Astro.props;
 const labels = ui[lang];
-const currentYear = new Date().getFullYear();
-const repoUrl = `https://github.com/${profile.githubUsername}/${profile.siteRepoName}`;
+const year = new Date().getFullYear();
 const githubUrl = `https://github.com/${profile.githubUsername}`;
+const repoUrl = `${githubUrl}/${profile.siteRepoName}`;
+
+const elsewhere = [
+  { label: 'GitHub', href: githubUrl },
+  profile.googleScholarUrl ? { label: 'Google Scholar', href: profile.googleScholarUrl } : null,
+  profile.orcidUrl ? { label: 'ORCID', href: profile.orcidUrl } : null,
+  { label: labels.footer.source, href: repoUrl },
+].filter((x): x is { label: string; href: string } => x !== null);
 ---
 
-<footer class="mt-20 border-t border-[var(--border)]">
-  <div class="mx-auto flex max-w-4xl flex-col gap-4 px-5 py-8 text-xs text-[var(--fg-faint)] sm:flex-row sm:items-center sm:justify-between sm:px-6">
-    <div class="space-y-1">
-      <p class="font-medium text-[var(--fg-muted)]">
-        © {currentYear} {profile.name.en}
+<footer class="mt-32 border-t border-ink md:mt-40">
+  <div class="wrap grid grid-cols-12 gap-x-8 gap-y-10 py-14 md:py-20">
+    <div class="col-span-12 lg:col-span-4">
+      <p class="display text-[clamp(2.6rem,4.6vw,3.6rem)] leading-[0.95] text-ink">
+        {labels.footer.signoff} <em>{labels.footer.signoffEm}</em>
       </p>
-      <p>{labels.footer.builtWith}</p>
     </div>
 
-    <div class="flex flex-wrap items-center gap-4">
-      <a
-        href={`mailto:${profile.email}`}
-        class="inline-flex items-center gap-1.5 text-[var(--fg-muted)] hover:text-[var(--accent)]"
-      >
-        <Icons name="mail" class="h-3.5 w-3.5" />
-        <span>{profile.email}</span>
+    <div class="col-span-12 sm:col-span-6 lg:col-span-3">
+      <p class="eyebrow">{labels.footer.contact}</p>
+      <a href={`mailto:${profile.email}`} class="link-line mt-3 inline-block text-[1.05rem] break-all">
+        {profile.email}
       </a>
-      <a
-        href={githubUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="inline-flex items-center gap-1.5 text-[var(--fg-muted)] hover:text-[var(--accent)]"
-      >
-        <Icons name="github" class="h-3.5 w-3.5" />
-        <span>@{profile.githubUsername}</span>
-      </a>
-      <a
-        href={repoUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="inline-flex items-center gap-1 text-[var(--fg-muted)] hover:text-[var(--accent)]"
-      >
-        <span>{labels.footer.lastUpdated}</span>
-        <Icons name="external" class="h-3 w-3" />
-      </a>
+    </div>
+
+    <div class="col-span-12 sm:col-span-6 lg:col-span-2">
+      <p class="eyebrow">{labels.footer.elsewhere}</p>
+      <ul class="mt-3 space-y-1.5 text-[1.05rem]">
+        {elsewhere.map((item) => (
+          <li>
+            <a href={item.href} target="_blank" rel="noopener noreferrer" class="link-line">
+              {item.label}
+            </a>
+            <span class="ml-1 text-ink-3" aria-hidden="true">↗</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="col-span-12 lg:col-span-3">
+      <p class="eyebrow">{labels.footer.colophon}</p>
+      <p class="mt-3 text-[14.5px] italic leading-relaxed text-ink-2">
+        {labels.footer.colophonText}
+      </p>
+      <p class="eyebrow mt-5">© {year} {profile.name.en}</p>
     </div>
   </div>
 </footer>

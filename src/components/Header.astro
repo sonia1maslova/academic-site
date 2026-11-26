@@ -7,7 +7,6 @@ import {
   localePath,
   type Locale,
 } from '../utils/paths';
-import Icons from './Icons.astro';
 
 interface Props {
   lang: Locale;
@@ -27,85 +26,64 @@ const navItems = [
   { label: labels.nav.experience, href: localePath(lang, 'experience') },
   { label: labels.nav.notes, href: localePath(lang, 'notes') },
 ];
-
-const displayName = lang === 'zh' ? profile.name.en : profile.name.en;
 ---
 
 <header
-  class="sticky top-0 z-40 border-b backdrop-blur-md"
-  style="background-color: color-mix(in srgb, var(--bg) 88%, transparent); border-color: var(--border);"
+  class="site-head sticky top-0 z-40 border-b border-ink backdrop-blur-md"
+  style="background-color: color-mix(in srgb, var(--paper) 88%, transparent);"
 >
-  <div class="mx-auto flex max-w-4xl items-center justify-between px-5 py-3.5 sm:px-6">
-    <a
-      href={localePath(lang, '')}
-      class="group flex items-center gap-2.5 text-[var(--fg)] no-underline"
-    >
-      <span
-        class="flex h-7 w-7 items-center justify-center rounded-md font-serif-display text-xs font-semibold tracking-tight transition-colors"
-        style="background-color: var(--accent); color: var(--bg);"
-      >
-        {profile.monogram}
+  <div class="wrap flex items-center justify-between gap-6 py-3.5">
+    <a href={localePath(lang, '')} class="group flex items-baseline gap-3">
+      <span class="display text-[1.6rem] leading-none text-ink transition-colors group-hover:text-accent">
+        {profile.name.en}
       </span>
-      <span class="font-serif-display text-base font-semibold tracking-tight group-hover:text-[var(--accent)]">
-        {displayName}
-      </span>
+      <span class="eyebrow hidden xl:inline">{labels.siteTagline}</span>
     </a>
 
-    <div class="flex items-center gap-1 sm:gap-2">
-      <nav aria-label="Main navigation" class="hidden items-center gap-1 md:flex">
-        {navItems.map((item) => {
-          const active = isActiveRoute(Astro.url.pathname, item.href);
-          return (
-            <a
-              href={item.href}
-              aria-current={active ? 'page' : undefined}
-              class:list={[
-                'rounded-md px-3 py-1.5 text-sm transition-colors',
-                active
-                  ? 'font-medium text-[var(--accent)] bg-[var(--accent-soft)]'
-                  : 'text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--bg-subtle)]',
-              ]}
-            >
-              {item.label}
-            </a>
-          );
-        })}
-      </nav>
+    <nav aria-label="Main navigation" class="hidden items-center gap-7 lg:flex">
+      {navItems.map((item) => {
+        const active = isActiveRoute(Astro.url.pathname, item.href);
+        return (
+          <a
+            href={item.href}
+            aria-current={active ? 'page' : undefined}
+            class:list={['nav-link', active && 'is-active']}
+          >
+            {item.label}
+          </a>
+        );
+      })}
+    </nav>
 
-      <div class="hidden h-4 w-px bg-[var(--border)] md:block mx-1" aria-hidden="true" />
-
+    <div class="flex items-center gap-5">
       <a
         href={switchHref}
-        class="inline-flex h-8 items-center justify-center rounded-md border border-[var(--border)] px-2.5 font-mono-meta text-xs font-medium text-[var(--fg-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent-soft)]"
+        lang={targetLang === 'zh' ? 'zh-CN' : 'en'}
+        class="nav-link"
         title={targetLang === 'zh' ? '切换至中文' : 'Switch to English'}
       >
         {labels.actions.switchLang}
       </a>
-
       <button
         type="button"
         id="theme-toggle"
+        class="nav-link inline-flex items-center"
         aria-label={labels.actions.switchTheme}
         title={labels.actions.switchTheme}
-        class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-[var(--border)] text-[var(--fg-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent-soft)]"
       >
-        <span class="dark:hidden">
-          <Icons name="moon" class="h-4 w-4" />
-        </span>
-        <span class="hidden dark:inline">
-          <Icons name="sun" class="h-4 w-4" />
-        </span>
+        <svg class="h-3.5 w-3.5" viewBox="0 0 16 16" aria-hidden="true">
+          <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.2" />
+          <path d="M8 1.75a6.25 6.25 0 0 1 0 12.5Z" fill="currentColor" />
+        </svg>
       </button>
-
       <button
         type="button"
         id="mobile-menu-toggle"
-        aria-label={labels.actions.menu}
+        class="nav-link lg:hidden"
         aria-expanded="false"
         aria-controls="mobile-nav"
-        class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-[var(--border)] text-[var(--fg-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] md:hidden"
       >
-        <Icons name="menu" class="h-4 w-4" />
+        {labels.actions.menu}
       </button>
     </div>
   </div>
@@ -113,28 +91,30 @@ const displayName = lang === 'zh' ? profile.name.en : profile.name.en;
   <nav
     id="mobile-nav"
     aria-label="Mobile navigation"
-    class="hidden border-t border-[var(--border)] px-5 py-3 md:hidden"
-    style="background-color: var(--bg);"
+    class="hidden border-t border-rule lg:hidden"
   >
-    <div class="flex flex-col gap-1">
-      {navItems.map((item) => {
+    <ol class="wrap py-4">
+      {navItems.map((item, idx) => {
         const active = isActiveRoute(Astro.url.pathname, item.href);
         return (
-          <a
-            href={item.href}
-            aria-current={active ? 'page' : undefined}
-            class:list={[
-              'rounded-md px-3 py-2 text-sm',
-              active
-                ? 'font-medium text-[var(--accent)] bg-[var(--accent-soft)]'
-                : 'text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--bg-subtle)]',
-            ]}
-          >
-            {item.label}
-          </a>
+          <li class="border-b border-rule last:border-b-0">
+            <a
+              href={item.href}
+              aria-current={active ? 'page' : undefined}
+              class:list={[
+                'flex items-baseline gap-4 py-3',
+                active ? 'text-accent' : 'text-ink',
+              ]}
+            >
+              <span class="font-mono text-[10px] text-ink-3">
+                {String(idx + 1).padStart(2, '0')}
+              </span>
+              <span class="display text-[1.8rem]">{item.label}</span>
+            </a>
+          </li>
         );
       })}
-    </div>
+    </ol>
   </nav>
 </header>
 

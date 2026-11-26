@@ -1,0 +1,62 @@
+---
+interface Props {
+  num: string;
+  kicker: string;
+  title: string;
+  titleEm?: string;
+  linkHref?: string;
+  linkLabel?: string;
+  layout?: 'split' | 'stacked';
+}
+
+const {
+  num,
+  kicker,
+  title,
+  titleEm,
+  linkHref,
+  linkLabel,
+  layout = 'split',
+} = Astro.props;
+---
+
+<section class="mt-28 md:mt-36">
+  <div class="flex items-baseline justify-between gap-4 border-t border-ink pt-3">
+    <p class="eyebrow">
+      <span class="text-accent">{num}</span>
+      <span class="mx-2">—</span>
+      {kicker}
+    </p>
+    {linkHref && linkLabel && (
+      <a href={linkHref} class="btn-text">
+        {linkLabel}
+        <span aria-hidden="true">→</span>
+      </a>
+    )}
+  </div>
+
+  {layout === 'split' ? (
+    <div class="mt-8 grid grid-cols-12 gap-x-8 gap-y-8">
+      <h2 class="display col-span-12 text-[clamp(2.5rem,4.8vw,3.8rem)] leading-[0.95] text-ink md:col-span-4">
+        {title}
+        {titleEm && (
+          <>
+            <br class="hidden md:block" /> <em>{titleEm}</em>
+          </>
+        )}
+      </h2>
+      <div class="col-span-12 md:col-span-8">
+        <slot />
+      </div>
+    </div>
+  ) : (
+    <div class="mt-8">
+      <h2 class="display max-w-4xl text-[clamp(2.5rem,5.6vw,4.6rem)] leading-[0.95] text-ink">
+        {title} {titleEm && <em>{titleEm}</em>}
+      </h2>
+      <div class="mt-10">
+        <slot />
+      </div>
+    </div>
+  )}
+</section>

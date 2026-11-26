@@ -3,7 +3,6 @@ import { getCollection, render, type CollectionEntry } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { ui } from '../i18n/ui';
 import { localePath, type Locale } from '../utils/paths';
-import Icons from './Icons.astro';
 
 interface Props {
   entry: CollectionEntry<'notes'>;
@@ -24,61 +23,35 @@ const alternateHref = hasTranslation
   : localePath(targetLang, 'notes');
 ---
 
-<BaseLayout
-  lang={lang}
-  title={entry.data.title}
-  description={entry.data.summary}
-  alternateHref={alternateHref}
->
-  <article class="mx-auto max-w-3xl">
-    <a
-      href={localePath(lang, 'notes')}
-      class="inline-flex items-center gap-1.5 font-mono-meta text-xs text-[var(--fg-muted)] hover:text-[var(--accent)]"
-    >
-      <Icons name="arrow-left" class="h-3.5 w-3.5" />
-      <span>{labels.actions.backToNotes}</span>
+<BaseLayout lang={lang} title={entry.data.title} description={entry.data.summary} alternateHref={alternateHref}>
+  <article class="mx-auto max-w-[44rem] pt-8 md:pt-14">
+    <a href={localePath(lang, 'notes')} class="btn-text">
+      <span aria-hidden="true">←</span> {labels.actions.backToNotes}
     </a>
 
-    <header class="mt-6 border-b border-[var(--border)] pb-6">
-      <div class="flex flex-wrap items-center gap-2 font-mono-meta text-xs text-[var(--fg-faint)]">
-        <span>
-          {labels.notes.publishedOn} {entry.data.date}
-        </span>
-        {entry.data.updated && (
-          <>
-            <span>·</span>
-            <span>
-              {labels.notes.updatedOn} {entry.data.updated}
-            </span>
-          </>
-        )}
-        <span>·</span>
-        <span>
-          {entry.data.readingTime} {labels.notes.readingTime}
-        </span>
-      </div>
-
-      <h1 class="mt-3 text-3xl font-semibold leading-tight text-[var(--fg)] sm:text-4xl">
+    <header class="mt-12 border-b border-ink pb-9">
+      <p class="eyebrow">
+        {labels.notes.publishedOn} {entry.data.date}
+        {entry.data.updated && <> · {labels.notes.updatedOn} {entry.data.updated}</>}
+        {' '}· {entry.data.readingTime} {labels.notes.readingTime}
+      </p>
+      <h1 class="display rise mt-6 text-[clamp(2.7rem,6.4vw,4.6rem)] leading-[0.98] text-ink">
         {entry.data.title}
       </h1>
-
-      <p class="mt-3 text-base leading-relaxed text-[var(--fg-muted)]">
-        {entry.data.summary}
-      </p>
-
+      <p class="rise rise-2 mt-7 text-[1.28rem] leading-snug text-ink-2 italic">{entry.data.summary}</p>
       {entry.data.tags.length > 0 && (
-        <div class="mt-4 flex flex-wrap gap-1.5">
-          {entry.data.tags.map((tag) => (
-            <span class="rounded bg-[var(--bg-subtle)] px-2.5 py-0.5 font-mono-meta text-xs text-[var(--fg-muted)]">
-              {tag}
-            </span>
-          ))}
-        </div>
+        <p class="mt-7 font-mono text-[10.5px] tracking-[0.06em] text-ink-3">{entry.data.tags.join(' / ')}</p>
       )}
     </header>
 
-    <div class="academic-prose mt-8">
+    <div class="prose-ed dropcap mt-12">
       <Content />
+    </div>
+
+    <div class="mt-16 border-t border-rule pt-6">
+      <a href={localePath(lang, 'notes')} class="btn-text">
+        <span aria-hidden="true">←</span> {labels.actions.backToNotes}
+      </a>
     </div>
   </article>
 </BaseLayout>

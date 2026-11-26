@@ -1,8 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { timelineNodes } from '../data/timeline';
 import { ui } from '../i18n/ui';
 import type { Locale } from '../utils/paths';
 import InteractiveTimeline from './InteractiveTimeline.astro';
+import PageHeader from './PageHeader.astro';
 
 interface Props {
   lang: Locale;
@@ -10,19 +12,22 @@ interface Props {
 
 const { lang } = Astro.props;
 const labels = ui[lang].timeline;
+const years = timelineNodes.map((n) => n.year);
+const span = `${Math.min(...years)} — ${Math.max(...years)}`;
 ---
 
-<BaseLayout lang={lang} title={labels.title} description={labels.subtitle}>
-  <header class="border-b border-[var(--border)] pb-7">
-    <h1 class="text-3xl font-semibold text-[var(--fg)] sm:text-4xl">
-      {labels.title}
-    </h1>
-    <p class="mt-2.5 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
-      {labels.subtitle}
-    </p>
-  </header>
+<BaseLayout lang={lang} title={`${labels.title} ${labels.em}`} description={labels.subtitle}>
+  <PageHeader
+    kicker={labels.kicker}
+    title={labels.title}
+    titleEm={labels.em}
+    lede={labels.subtitle}
+    meta={`${span} · ${timelineNodes.length} ${labels.entries}`}
+  />
 
-  <section class="mt-8">
-    <InteractiveTimeline lang={lang} compact={false} />
+  <section class="band band-ink mt-14 py-12 md:mt-20 md:py-16">
+    <div class="wrap">
+      <InteractiveTimeline lang={lang} compact={false} />
+    </div>
   </section>
 </BaseLayout>

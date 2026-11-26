@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { ui } from '../i18n/ui';
 import type { Locale } from '../utils/paths';
+import PageHeader from './PageHeader.astro';
 import PublicationCard from './PublicationCard.astro';
 
 interface Props {
@@ -10,143 +11,80 @@ interface Props {
 }
 
 const { lang } = Astro.props;
-const labels = ui[lang];
+const labels = ui[lang].publications;
 
 const publications = (await getCollection('publications')).sort((a, b) =>
   b.data.date.localeCompare(a.data.date)
 );
-
 const years = Array.from(new Set(publications.map((p) => p.data.year))).sort((a, b) => b - a);
-const filters = [
-  { key: 'all', label: labels.publications.all },
-  { key: 'journal', label: labels.publications.journal },
-  { key: 'preprint', label: labels.publications.preprint },
-  { key: 'conference', label: labels.publications.conference },
-] as const;
+const filters = (['all', 'journal', 'preprint', 'conference'] as const).map((key) => ({
+  key,
+  label: labels[key],
+  count: key === 'all' ? publications.length : publications.filter((p) => p.data.type === key).length,
+}));
 ---
 
-<BaseLayout lang={lang} title={labels.publications.title} description={labels.publications.subtitle}>
-  <header class="border-b border-[var(--border)] pb-7">
-    <h1 class="text-3xl font-semibold text-[var(--fg)] sm:text-4xl">
-      {labels.publications.title}
-    </h1>
-    <p class="mt-2.5 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
-      {labels.publications.subtitle}
-    </p>
+<BaseLayout lang={lang} title={`${labels.title} ${labels.em}`} description={labels.subtitle}>
+  <PageHeader
+    kicker={labels.kicker}
+    title={labels.title}
+    titleEm={labels.em}
+    lede={labels.subtitle}
+    meta={`${publications.length} ${labels.entries}`}
+  />
 
-    <div class="mt-5 flex flex-wrap gap-2" role="tablist" aria-label="Filter publications">
-      {filters.map((f, idx) => (
-        <button
-          type="button"
-          class:list={[
-            'pub-filter-btn cursor-pointer rounded-md border px-3 py-1.5 font-mono-meta text-xs transition-colors',
-            idx === 0
-              ? 'border-[var(--accent)] bg-[var(--accent-soft)] font-medium text-[var(--accent)]'
-              : 'border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]',
-          ]}
-          data-filter={f.key}
-        >
-          {f.label}
-        </button>
-      ))}
-    </div>
-  </header>
-
-  <div class="mt-8 space-y-10" id="publications-list">
-    {years.map((year) => {
-      const yearPubs = publications.filter((p) => p.data.year === year);
-      return (
-        <section class="pub-year-group" data-year={year}>
-          <div class="mb-4 flex items-center gap-3">
-            <h2 class="font-mono-meta text-sm font-semibold tracking-wider text-[var(--fg-muted)]">
-              {year}
-            </h2>
-            <div class="h-px flex-1 bg-[var(--border)]" />
-          </div>
-          <div class="space-y-4">
-            {yearPubs.map((pub) => (
-              <PublicationCard entry={pub} lang={lang} />
-            ))}
-          </div>
-        </section>
-      );
-    })}
+  <div class="mt-14 flex flex-wrap gap-x-7 gap-y-2 border-b border-rule pb-3" role="group">
+    {filters.map((f, idx) => (
+      <button
+        type="button"
+        class="filter-btn"
+        data-pub-filter={f.key}
+        aria-pressed={idx === 0 ? 'true' : 'false'}
+      >
+        <span>{f.label}</span>
+        <sup>{f.count}</sup>
+      </button>
+    ))}
   </div>
 
-  <p id="pub-empty-msg" class="mt-10 hidden text-center text-sm text-[var(--fg-faint)]">
-    {labels.publications.empty}
-  </p>
+  {years.map((year) => (
+    <section class="mt-14 grid grid-cols-12 gap-x-8 border-t border-ink pt-5" data-year-group>
+      <div class="col-span-12 md:col-span-3">
+        <p class="display text-[clamp(3.2rem,6.5vw,5.4rem)] leading-[0.85] text-ink italic md:sticky md:top-24">
+          {year}
+        </p>
+      </div>
+      <div class="col-span-12 md:col-span-9">
+        {publications
+          .filter((p) => p.data.year === year)
+          .map((pub) => <PublicationCard entry={pub} lang={lang} />)}
+      </div>
+    </section>
+  ))}
+
+  <p class="mt-16 text-center text-ink-3 italic" data-pub-empty hidden>{labels.empty}</p>
 </BaseLayout>
 
-<script is:inline>
-  (() => {
-    const filterButtons = document.querySelectorAll('.pub-filter-btn');
-    const items = document.querySelectorAll('.pub-item');
-    const groups = document.querySelectorAll('.pub-year-group');
-    const emptyMsg = document.getElementById('pub-empty-msg');
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-pub-filter]');
+  const items = document.querySelectorAll<HTMLElement>('.pub-item');
+  const groups = document.querySelectorAll<HTMLElement>('[data-year-group]');
+  const empty = document.querySelector<HTMLElement>('[data-pub-empty]');
 
-    filterButtons.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const selected = btn.getAttribute('data-filter') || 'all';
-        filterButtons.forEach((b) => {
-          const active = b === btn;
-          b.classList.toggle('border-[var(--accent)]', active);
-          b.classList.toggle('bg-[var(--accent-soft)]', active);
-          b.classList.toggle('font-medium', active);
-          b.classList.toggle('text-[var(--accent)]', active);
-          b.classList.toggle('border-[var(--border)]', !active);
-          b.classList.toggle('bg-[var(--bg-elevated)]', !active);
-          b.classList.toggle('text-[var(--fg-muted)]', !active);
-        });
-
-        let visibleTotal = 0;
-        items.forEach((item) => {
-          const type = item.getAttribute('data-pub-type');
-          const show = selected === 'all' || type === selected;
-          item.classList.toggle('hidden', !show);
-          if (show) visibleTotal += 1;
-        });
-
-        groups.forEach((group) => {
-          const hasVisible = group.querySelector('.pub-item:not(.hidden)') !== null;
-          group.classList.toggle('hidden', !hasVisible);
-        });
-
-        if (emptyMsg) {
-          emptyMsg.classList.toggle('hidden', visibleTotal > 0);
-        }
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.pubFilter ?? 'all';
+      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      let shown = 0;
+      items.forEach((item) => {
+        const show = key === 'all' || item.dataset.pubType === key;
+        item.toggleAttribute('hidden', !show);
+        if (show) shown += 1;
       });
-    });
-
-    document.querySelectorAll('.pub-toggle').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const targetId = btn.getAttribute('data-target');
-        if (!targetId) return;
-        const panel = document.getElementById(targetId);
-        if (!panel) return;
-        const isHidden = panel.classList.toggle('hidden');
-        btn.setAttribute('aria-expanded', String(!isHidden));
+      groups.forEach((g) => {
+        g.toggleAttribute('hidden', g.querySelector('.pub-item:not([hidden])') === null);
       });
+      empty?.toggleAttribute('hidden', shown > 0);
     });
-
-    document.querySelectorAll('.copy-bibtex-btn').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const container = btn.closest('[id^="bibtex-"]');
-        const code = container?.querySelector('code')?.textContent ?? '';
-        if (!code) return;
-        try {
-          await navigator.clipboard.writeText(code);
-          const labelSpan = btn.querySelector('.copy-label');
-          if (labelSpan) {
-            const orig = btn.getAttribute('data-copy-label') || 'Copy';
-            const done = btn.getAttribute('data-copied-label') || 'Copied';
-            labelSpan.textContent = done;
-            setTimeout(() => {
-              labelSpan.textContent = orig;
-            }, 1800);
-          }
-        } catch {}
-      });
-    });
-  })();
+  });
 </script>

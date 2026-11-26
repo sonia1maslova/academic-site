@@ -1,4 +1,13 @@
 ---
+import '@fontsource/instrument-serif/400.css';
+import '@fontsource/instrument-serif/400-italic.css';
+import '@fontsource/newsreader/400.css';
+import '@fontsource/newsreader/500.css';
+import '@fontsource/newsreader/600.css';
+import '@fontsource/newsreader/400-italic.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/noto-serif-sc/400.css';
+import '@fontsource/noto-serif-sc/600.css';
 import '../styles/global.css';
 import { profile } from '../data/profile';
 import { ui } from '../i18n/ui';
@@ -15,9 +24,9 @@ interface Props {
 
 const { lang, title, description, alternateHref } = Astro.props;
 const labels = ui[lang];
-const baseTitle = `${profile.name.en} · ${labels.siteTagline}`;
+const baseTitle = `${profile.name.en} — ${labels.siteTagline}`;
 const pageTitle = title ? `${title} — ${profile.name.en}` : baseTitle;
-const pageDesc = description ?? profile.bio[lang][0];
+const pageDesc = description ?? profile.dek[lang];
 const htmlLang = lang === 'zh' ? 'zh-CN' : 'en';
 ---
 
@@ -28,18 +37,10 @@ const htmlLang = lang === 'zh' ? 'zh-CN' : 'en';
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={pageDesc} />
     <meta name="author" content={profile.name.en} />
+    <meta name="theme-color" content="#f3efe6" />
     <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
     <title>{pageTitle}</title>
 
-    <!-- Editorial Google Fonts with fast swap & system/CJK fallbacks -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap"
-      rel="stylesheet"
-    />
-
-    <!-- Zero-flash theme initialization -->
     <script is:inline>
       (() => {
         try {
@@ -54,7 +55,7 @@ const htmlLang = lang === 'zh' ? 'zh-CN' : 'en';
   </head>
   <body>
     <Header lang={lang} alternateHref={alternateHref} />
-    <main class="mx-auto w-full max-w-4xl flex-1 px-5 pt-10 sm:px-6 sm:pt-14">
+    <main class="wrap flex-1">
       <slot />
     </main>
     <Footer lang={lang} />

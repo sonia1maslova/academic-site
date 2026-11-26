@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { ui } from '../i18n/ui';
 import type { Locale } from '../utils/paths';
+import PageHeader from './PageHeader.astro';
 import ProjectCard from './ProjectCard.astro';
 
 interface Props {
@@ -10,100 +11,64 @@ interface Props {
 }
 
 const { lang } = Astro.props;
-const labels = ui[lang];
+const labels = ui[lang].projects;
 
-const projects = (await getCollection('projects')).sort(
-  (a, b) => a.data.order - b.data.order
-);
-
-const filters = [
-  { key: 'all', label: labels.projects.all },
-  { key: 'software', label: labels.projects.software },
-  { key: 'research', label: labels.projects.research },
-  { key: 'visualization', label: labels.projects.visualization },
-  { key: 'tool', label: labels.projects.tool },
-  { key: 'notes', label: labels.projects.notes },
-] as const;
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+const filters = (['all', 'software', 'research', 'visualization', 'tool', 'notes'] as const)
+  .map((key) => ({
+    key,
+    label: labels[key],
+    count: key === 'all' ? projects.length : projects.filter((p) => p.data.category === key).length,
+  }))
+  .filter((f) => f.count > 0);
 ---
 
-<BaseLayout lang={lang} title={labels.projects.title} description={labels.projects.subtitle}>
-  <header class="border-b border-[var(--border)] pb-7">
-    <div class="flex flex-wrap items-center gap-3">
-      <h1 class="text-3xl font-semibold text-[var(--fg)] sm:text-4xl">
-        {labels.projects.title}
-      </h1>
-      <span
-        class="rounded-full px-2.5 py-0.5 font-mono-meta text-xs"
-        style="background-color: var(--accent-soft); color: var(--accent);"
+<BaseLayout lang={lang} title={`${labels.title} ${labels.em}`} description={labels.subtitle}>
+  <PageHeader
+    kicker={labels.kicker}
+    title={labels.title}
+    titleEm={labels.em}
+    lede={labels.subtitle}
+    meta={`${projects.length} ${labels.entries}`}
+  />
+
+  <div class="mt-14 flex flex-wrap gap-x-7 gap-y-2 border-b border-ink pb-3" role="group">
+    {filters.map((f, idx) => (
+      <button
+        type="button"
+        class="filter-btn"
+        data-proj-filter={f.key}
+        aria-pressed={idx === 0 ? 'true' : 'false'}
       >
-        {labels.projects.githubImported}
-      </span>
-    </div>
-    <p class="mt-2.5 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
-      {labels.projects.subtitle}
-    </p>
-
-    <div class="mt-5 flex flex-wrap gap-2" role="tablist" aria-label="Filter projects">
-      {filters.map((f, idx) => (
-        <button
-          type="button"
-          class:list={[
-            'proj-filter-btn cursor-pointer rounded-md border px-3 py-1.5 font-mono-meta text-xs transition-colors',
-            idx === 0
-              ? 'border-[var(--accent)] bg-[var(--accent-soft)] font-medium text-[var(--accent)]'
-              : 'border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]',
-          ]}
-          data-filter={f.key}
-        >
-          {f.label}
-        </button>
-      ))}
-    </div>
-  </header>
-
-  <div class="mt-8 grid gap-5" id="projects-grid">
-    {projects.map((project) => (
-      <ProjectCard entry={project} lang={lang} />
+        <span>{f.label}</span>
+        <sup>{f.count}</sup>
+      </button>
     ))}
   </div>
 
-  <p id="proj-empty-msg" class="mt-10 hidden text-center text-sm text-[var(--fg-faint)]">
-    {labels.projects.empty}
-  </p>
+  <ol>
+    {projects.map((project, idx) => <ProjectCard entry={project} lang={lang} index={idx} />)}
+  </ol>
+
+  <p class="mt-16 text-center text-ink-3 italic" data-proj-empty hidden>{labels.empty}</p>
 </BaseLayout>
 
-<script is:inline>
-  (() => {
-    const buttons = document.querySelectorAll('.proj-filter-btn');
-    const cards = document.querySelectorAll('.project-item');
-    const emptyMsg = document.getElementById('proj-empty-msg');
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-proj-filter]');
+  const items = document.querySelectorAll<HTMLElement>('.project-item');
+  const empty = document.querySelector<HTMLElement>('[data-proj-empty]');
 
-    buttons.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const selected = btn.getAttribute('data-filter') || 'all';
-        buttons.forEach((b) => {
-          const active = b === btn;
-          b.classList.toggle('border-[var(--accent)]', active);
-          b.classList.toggle('bg-[var(--accent-soft)]', active);
-          b.classList.toggle('font-medium', active);
-          b.classList.toggle('text-[var(--accent)]', active);
-          b.classList.toggle('border-[var(--border)]', !active);
-          b.classList.toggle('bg-[var(--bg-elevated)]', !active);
-          b.classList.toggle('text-[var(--fg-muted)]', !active);
-        });
-
-        let visible = 0;
-        cards.forEach((card) => {
-          const cat = card.getAttribute('data-project-category');
-          const show = selected === 'all' || cat === selected;
-          card.classList.toggle('hidden', !show);
-          if (show) visible += 1;
-        });
-
-        if (emptyMsg) {
-          emptyMsg.classList.toggle('hidden', visible > 0);
-        }
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.projFilter ?? 'all';
+      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      let shown = 0;
+      items.forEach((item) => {
+        const show = key === 'all' || item.dataset.projectCategory === key;
+        item.toggleAttribute('hidden', !show);
+        if (show) shown += 1;
       });
+      empty?.toggleAttribute('hidden', shown > 0);
     });
-  })();
+  });
 </script>
