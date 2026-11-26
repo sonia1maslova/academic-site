@@ -16,7 +16,7 @@ This website is built with **Astro** and deployed automatically via **GitHub Act
 | What to update | File location |
 | --- | --- |
 | Bio, affiliation, links, avatar & CV PDF | `src/data/profile.ts` |
-| Latest news & milestones | `src/data/news.ts` |
+| Interactive draggable timeline milestones | `src/data/timeline.ts` |
 | Education, research experience, honors & skills | `src/data/experience.ts` |
 | Papers, preprints & conference abstracts | `src/content/publications/*.md` |
 | Open-source projects & research tools | `src/content/projects/*.md` |

@@ -1,0 +1,28 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { ui } from '../i18n/ui';
+import type { Locale } from '../utils/paths';
+import InteractiveTimeline from './InteractiveTimeline.astro';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const labels = ui[lang].timeline;
+---
+
+<BaseLayout lang={lang} title={labels.title} description={labels.subtitle}>
+  <header class="border-b border-[var(--border)] pb-7">
+    <h1 class="text-3xl font-semibold text-[var(--fg)] sm:text-4xl">
+      {labels.title}
+    </h1>
+    <p class="mt-2.5 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
+      {labels.subtitle}
+    </p>
+  </header>
+
+  <section class="mt-8">
+    <InteractiveTimeline lang={lang} compact={false} />
+  </section>
+</BaseLayout>

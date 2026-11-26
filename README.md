@@ -18,7 +18,7 @@ A minimalist, bilingual (**English / 中文**) academic homepage built with **As
 | Content / 内容 | File Path / 文件路径 |
 | --- | --- |
 | Bio, name, affiliation, links, avatar, CV PDF / 个人简介、头像与简历 | `src/data/profile.ts` |
-| Latest news & updates / 最新科研动态 | `src/data/news.ts` |
+| Interactive draggable timeline milestones / 交互式时间轴节点 | `src/data/timeline.ts` |
 | Education, experience, honors, service, skills / 教育与科研履历 | `src/data/experience.ts` |
 | Publications (1 Markdown file per paper) / 论文与成果 | `src/content/publications/*.md` |
 | Research projects & open-source repos / 科研项目与开源工具 | `src/content/projects/*.md` |

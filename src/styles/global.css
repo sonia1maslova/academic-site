@@ -17,6 +17,11 @@
   --warn-bg: #fef9ec;
   --warn-border: #ead7a1;
   --warn-fg: #7c5812;
+  --tl-research: #2558b8;
+  --tl-software: #0f5c6e;
+  --tl-publication: #b45309;
+  --tl-education: #0f766e;
+  --tl-milestone: #9f1239;
   --font-serif: "Newsreader", "Source Serif 4", "Noto Serif SC", "Songti SC", Georgia, Cambria, serif;
   --font-sans: "Inter", "IBM Plex Sans", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -37,6 +42,11 @@
   --warn-bg: #262013;
   --warn-border: #4d3f1d;
   --warn-fg: #e7c97c;
+  --tl-research: #6ea8fe;
+  --tl-software: #5ec2d4;
+  --tl-publication: #f6b94c;
+  --tl-education: #45d1a6;
+  --tl-milestone: #f57c96;
 }
 
 @layer base {
@@ -251,6 +261,72 @@
 .dark .astro-code span {
   color: var(--shiki-dark) !important;
   background-color: var(--shiki-dark-bg) !important;
+}
+
+/* Interactive Draggable Timeline styling */
+.timeline-stage {
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--border-strong) 45%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 20px 20px;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.timeline-stage.is-dragging {
+  cursor: grabbing;
+}
+
+.timeline-card {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  transition:
+    border-color 180ms ease,
+    box-shadow 220ms ease,
+    transform 220ms ease,
+    opacity 220ms ease;
+}
+
+.timeline-card:hover {
+  border-color: var(--border-strong);
+}
+
+.timeline-card.is-active {
+  border-color: var(--node-color, var(--accent));
+  box-shadow:
+    0 10px 28px -12px color-mix(in srgb, var(--node-color, var(--accent)) 35%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--node-color, var(--accent)) 22%, transparent);
+}
+
+.timeline-dot {
+  transition:
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 200ms ease,
+    background-color 180ms ease;
+}
+
+.timeline-dot.is-active {
+  transform: translate(-50%, -50%) scale(1.38);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--node-color, var(--accent)) 22%, transparent);
+}
+
+.timeline-scrubber-track {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.timeline-scrubber-thumb {
+  cursor: grab;
+  transition: box-shadow 150ms ease, border-color 150ms ease;
+}
+
+.timeline-scrubber-thumb.is-dragging {
+  cursor: grabbing;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 /* Print optimization for CV / Experience page */

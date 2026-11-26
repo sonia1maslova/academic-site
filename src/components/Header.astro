@@ -21,6 +21,7 @@ const switchHref = alternateHref ?? getAlternateLocalePath(Astro.url.pathname, t
 
 const navItems = [
   { label: labels.nav.home, href: localePath(lang, '') },
+  { label: labels.nav.timeline, href: localePath(lang, 'timeline') },
   { label: labels.nav.publications, href: localePath(lang, 'publications') },
   { label: labels.nav.projects, href: localePath(lang, 'projects') },
   { label: labels.nav.experience, href: localePath(lang, 'experience') },

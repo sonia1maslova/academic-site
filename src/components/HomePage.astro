@@ -2,10 +2,10 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { profile } from '../data/profile';
-import { newsItems } from '../data/news';
 import { t, ui } from '../i18n/ui';
 import { localePath, withBase, type Locale } from '../utils/paths';
 import Icons from './Icons.astro';
+import InteractiveTimeline from './InteractiveTimeline.astro';
 import ProjectCard from './ProjectCard.astro';
 import PublicationCard from './PublicationCard.astro';
 
@@ -173,32 +173,19 @@ const cvHref = profile.cvPdfPath
     </div>
   </section>
 
-  <!-- Latest News -->
+  <!-- Interactive Research Timeline -->
   <section class="mt-16 border-t border-[var(--border)] pt-10">
-    <h2 class="text-2xl font-semibold text-[var(--fg)]">{labels.home.latestNews}</h2>
-    <ul class="mt-5 divide-y divide-[var(--border)] border-y border-[var(--border)]">
-      {newsItems.map((item) => (
-        <li class="grid gap-1.5 py-3.5 sm:grid-cols-[5.5rem_1fr] sm:items-baseline sm:gap-5">
-          <span class="font-mono-meta text-xs font-medium text-[var(--fg-faint)]">
-            {item.date}
-          </span>
-          <div class="text-sm leading-relaxed text-[var(--fg)]/90">
-            <span>{t(item.text, lang)}</span>
-            {item.link && (
-              <a
-                href={item.link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="accent-link ml-2 inline-flex items-center gap-0.5 font-mono-meta text-xs whitespace-nowrap"
-              >
-                <span>{t(item.link.label, lang)}</span>
-                <Icons name="external" class="h-3 w-3" />
-              </a>
-            )}
-          </div>
-        </li>
-      ))}
-    </ul>
+    <div class="mb-5 flex flex-wrap items-baseline justify-between gap-2">
+      <h2 class="text-2xl font-semibold text-[var(--fg)]">{labels.home.latestNews}</h2>
+      <a
+        href={localePath(lang, 'timeline')}
+        class="inline-flex items-center gap-1 text-sm font-medium text-[var(--accent)] hover:text-[var(--accent-hover)]"
+      >
+        <span>{labels.home.fullTimeline}</span>
+        <Icons name="arrow-right" class="h-3.5 w-3.5" />
+      </a>
+    </div>
+    <InteractiveTimeline lang={lang} compact={true} />
   </section>
 
   <!-- Featured Open-Source Projects from GitHub -->

@@ -14,6 +14,7 @@ export const ui = {
     siteTagline: 'Academic Homepage',
     nav: {
       home: 'About',
+      timeline: 'Timeline',
       publications: 'Publications',
       projects: 'Projects',
       experience: 'Experience',
@@ -46,7 +47,8 @@ export const ui = {
     },
     home: {
       researchInterests: 'Research Interests',
-      latestNews: 'News & Updates',
+      latestNews: 'Interactive Research Timeline',
+      fullTimeline: 'Open full timeline',
       selectedPublications: 'Selected Publications',
       featuredProjects: 'Research Software & Open-Source Projects',
       recentNotes: 'Research Notes',
@@ -54,6 +56,29 @@ export const ui = {
       templateNoticeTitle: 'Starter Template Ready to Personalize',
       templateNoticeBody:
         'Your public GitHub research repositories have been imported automatically. Biography details, education/experience entries, and sample papers marked with a template badge can be replaced in src/data/ and src/content/.',
+    },
+    timeline: {
+      title: 'Research Timeline',
+      subtitle:
+        'Drag the timeline track or scrub the ruler below to explore key research milestones, open-source releases, and academic events.',
+      dragHint: 'Drag track or scrub ruler',
+      prev: 'Previous',
+      next: 'Next',
+      jumpToYear: 'Jump to year',
+      zoomCompact: 'Compact',
+      zoomStandard: 'Standard',
+      zoomWide: 'Wide',
+      templateBadge: 'Example Node',
+      keyPoints: 'Highlights & Outcomes',
+      empty: 'No milestones in this category yet.',
+      categories: {
+        all: 'All',
+        research: 'Research',
+        software: 'Software',
+        publication: 'Publication',
+        education: 'Education',
+        milestone: 'Milestone',
+      },
     },
     publications: {
       title: 'Publications',
@@ -108,6 +133,7 @@ export const ui = {
     siteTagline: '科研个人主页',
     nav: {
       home: '简介',
+      timeline: '时间轴',
       publications: '学术成果',
       projects: '科研项目',
       experience: '经历履历',
@@ -140,7 +166,8 @@ export const ui = {
     },
     home: {
       researchInterests: '研究方向',
-      latestNews: '最新动态',
+      latestNews: '交互式科研时间轴',
+      fullTimeline: '打开完整时间轴',
       selectedPublications: '代表性成果',
       featuredProjects: '科研工具与开源项目',
       recentNotes: '科研笔记',
@@ -148,6 +175,29 @@ export const ui = {
       templateNoticeTitle: '站点框架已就绪，可随时替换为真实简历信息',
       templateNoticeBody:
         '已自动收录你 GitHub 公开的科研工具、分析代码与图表画廊仓库；带有“示例占位”标记的个人院校、经历与论文条目，均可在 src/data/ 与 src/content/ 中快速修改。',
+    },
+    timeline: {
+      title: '科研与经历时间轴',
+      subtitle:
+        '可直接拖拽时间轴轨道、拉动下方标尺滑块或点击节点，交互式回溯关键研究进展、开源工具发布与学术节点。',
+      dragHint: '左右拖拽轨道 · 或拉动下方标尺',
+      prev: '上一节点',
+      next: '下一节点',
+      jumpToYear: '快速跳转年份',
+      zoomCompact: '紧凑',
+      zoomStandard: '标准',
+      zoomWide: '舒展',
+      templateBadge: '示例节点',
+      keyPoints: '节点要点与产出',
+      empty: '该分类下暂无时间轴节点。',
+      categories: {
+        all: '全部',
+        research: '科研进展',
+        software: '开源软件',
+        publication: '学术成果',
+        education: '教育背景',
+        milestone: '重要节点',
+      },
     },
     publications: {
       title: '学术成果与论文',

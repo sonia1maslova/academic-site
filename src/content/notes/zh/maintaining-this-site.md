@@ -16,7 +16,7 @@ summary: "简明维护手册：如何修改个人简介、添加新论文/项目
 | 需要更新的内容 | 对应文件路径 |
 | --- | --- |
 | 个人简介、所在院校、社交链接、头像与简历 PDF | `src/data/profile.ts` |
-| 首页最新动态（News & Updates） | `src/data/news.ts` |
+| 交互式时间轴节点（科研与成长里程碑） | `src/data/timeline.ts` |
 | 教育背景、科研经历、荣誉奖项与技术栈 | `src/data/experience.ts` |
 | 论文、预印本与会议报告（每篇一个文件） | `src/content/publications/*.md` |
 | 科研项目与开源仓库（每个项目一个文件） | `src/content/projects/*.md` |
